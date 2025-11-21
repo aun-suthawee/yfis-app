@@ -2,7 +2,7 @@
 
 @section('content')
     <div class="mb-4">
-        <h1 class="h3 mb-1 fw-bold text-white">แดชบอร์ดสถานการณ์ภัยพิบัติ</h1>
+        <h1 class="h3 mb-1 fw-bold text-white">แดชบอร์ดสถานการณ์อุทกภัยจังหวัดยะลา</h1>
         <p class="text-white mb-0" style="text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.5);">
             ข้อมูลเรียลไทม์สำหรับการตัดสินใจเชิงนโยบาย</p>
     </div>
@@ -19,18 +19,19 @@
         {{-- <a href="{{ route('dashboard.export.pdf', $filters) }}" class="btn btn-outline-danger btn-sm d-flex align-items-center">
             <i class="bi bi-file-pdf me-2"></i> Export PDF
         </a> --}}
-        <a href="{{ route('dashboard.export.excel', $filters) }}"
+        {{-- <a href="{{ route('dashboard.export.excel', $filters) }}"
             class="btn btn-outline-success btn-sm d-flex align-items-center">
             <i class="bi bi-file-excel me-2"></i> Export Excel
-        </a>
+        </a> --}}
     </div>
 
-    {{--     with Sparkline Charts --}}
+    {{-- Main charts with Sparkline Charts --}}
     <div class="row g-3 mb-4">
-        <!-- 1. Affected Institutions -->
-        <div class="col-md-3">
+        <!-- big left / big right layout first row then mixed below -->
+        <!-- 1. Affected Institutions (large) -->
+        <div class="col-lg-6">
             <a href="{{ route('disaster.index') }}" class="text-decoration-none">
-                <div class="card h-100 border-0 shadow-sm hover-shadow transition-all position-relative overflow-hidden"
+                <div class="card card-lg h-100 border-0 shadow-sm hover-shadow transition-all position-relative overflow-hidden"
                     style="background: rgba(13, 110, 253, 0.3) !important;">
                     <div class="card-body">
                         <div class="d-flex justify-content-between align-items-start mb-3">
@@ -52,9 +53,9 @@
                                 <i class="bi bi-building-fill text-light fs-4"></i>
                             </div>
                         </div>
-                        <div class="mt-3">
-                            <canvas id="sparkline1" height="40"></canvas>
-                        </div>
+                            <div class="mt-3">
+                                <canvas id="sparkline1" height="100"></canvas>
+                            </div>
                     </div>
                     <div class="card-footer border-0 py-2 small text-white"
                         style="background: rgba(13, 110, 253, 0.2) !important;">
@@ -64,45 +65,39 @@
             </a>
         </div>
 
-        <!-- 2. Closed Institutions -->
-        <div class="col-md-3">
-            <a href="{{ route('disaster.index', ['teaching_status' => 'closed']) }}" class="text-decoration-none">
-                <div class="card h-100 border-0 shadow-sm hover-shadow transition-all position-relative overflow-hidden"
-                    style="background: rgba(220, 53, 69, 0.3) !important;">
-                    <div class="card-body">
-                        <div class="d-flex justify-content-between align-items-start mb-3">
-                            <div class="grow">
-                                <h6 class="text-white text-uppercase small fw-bold mb-2">ปิดการเรียนการสอน</h6>
-                                <div class="d-flex align-items-baseline mb-1">
-                                    <h2 class="mb-0 me-2 text-white fw-bold">
-                                        {{ number_format($dashboard['summary']['total_closed']) }}</h2>
-                                    <span class="text-white small">แห่ง</span>
-                                </div>
-                                <small class="text-white fw-bold">
-                                    <i
-                                        class="bi bi-pie-chart-fill me-1"></i>{{ number_format($dashboard['summary']['closed_percent'], 1) }}%
-                                </small>
-                                <span class="text-white small d-block">ของผู้ได้รับผลกระทบ</span>
+        <!-- 2. Estimated Damage (large) -->
+        <div class="col-lg-6">
+            <div class="card card-lg h-100 border-0 shadow-sm position-relative overflow-hidden"
+                style="background: rgba(108, 117, 125, 0.3) !important;">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <div class="grow">
+                            <h6 class="text-white text-uppercase small fw-bold mb-2">ประมาณการความเสียหาย</h6>
+                            <div class="d-flex align-items-baseline mb-1">
+                                <h2 class="mb-0 me-2 text-white fw-bold">
+                                    {{ number_format($dashboard['summary']['total_damage'] / 1000000, 1) }}</h2>
+                                <span class="text-white small">ล้านบาท</span>
                             </div>
-                            <div class="stat-icon-circle bg-light bg-opacity-25">
-                                <i class="bi bi-x-circle-fill text-light fs-4"></i>
-                            </div>
+                            <small class="text-white d-block">อาคาร + ครุภัณฑ์ + วัสดุ</small>
                         </div>
-                        <div class="mt-3">
-                            <canvas id="sparkline2" height="40"></canvas>
+                        <div class="stat-icon-circle bg-light bg-opacity-25">
+                            <i class="bi bi-cash-stack text-light fs-4"></i>
                         </div>
                     </div>
-                    <div class="card-footer border-0 py-2 small text-white"
-                        style="background: rgba(220, 53, 69, 0.2) !important;">
-                        <i class="bi bi-graph-up me-1"></i>แนวโน้ม 7 วันล่าสุด
+                    <div class="mt-3">
+                        <canvas id="sparkline5" height="100"></canvas>
                     </div>
                 </div>
-            </a>
+                <div class="card-footer border-0 py-2 small text-white"
+                    style="background: rgba(108, 117, 125, 0.2) !important;">
+                    <i class="bi bi-graph-up me-1"></i>แนวโน้ม 7 วันล่าสุด
+                </div>
+            </div>
         </div>
 
-        <!-- 3. Affected Students -->
-        <div class="col-md-3">
-            <div class="card h-100 border-0 shadow-sm position-relative overflow-hidden"
+        <!-- 3. Affected Students (medium) -->
+        <div class="col-md-4">
+            <div class="card card-md h-100 border-0 shadow-sm position-relative overflow-hidden"
                 style="background: rgba(255, 193, 7, 0.3) !important;">
                 <div class="card-body">
                     <div class="d-flex justify-content-between align-items-start mb-3">
@@ -125,7 +120,7 @@
                         </div>
                     </div>
                     <div class="mt-3">
-                        <canvas id="sparkline3" height="60"></canvas>
+                        <canvas id="sparkline3" height="80"></canvas>
                     </div>
                 </div>
                 <div class="card-footer border-0 py-2 small text-white"
@@ -135,9 +130,9 @@
             </div>
         </div>
 
-        <!-- 4. Affected Staff -->
-        <div class="col-md-3">
-            <div class="card h-100 border-0 shadow-sm position-relative overflow-hidden"
+        <!-- 4. Affected Staff (medium) -->
+        <div class="col-md-4">
+            <div class="card card-md h-100 border-0 shadow-sm position-relative overflow-hidden"
                 style="background: rgba(13, 202, 240, 0.3) !important;">
                 <div class="card-body">
                     <div class="d-flex justify-content-between align-items-start mb-3">
@@ -160,7 +155,7 @@
                         </div>
                     </div>
                     <div class="mt-3">
-                        <canvas id="sparkline4" height="60"></canvas>
+                        <canvas id="sparkline4" height="80"></canvas>
                     </div>
                 </div>
                 <div class="card-footer border-0 py-2 small text-white"
@@ -170,40 +165,44 @@
             </div>
         </div>
 
-        <!-- 5. Estimated Damage -->
-        <div class="col-md-3">
-            <div class="card h-100 border-0 shadow-sm position-relative overflow-hidden"
-                style="background: rgba(108, 117, 125, 0.3) !important;">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-start mb-3">
-                        <div class="grow">
-                            <h6 class="text-white text-uppercase small fw-bold mb-2">ประมาณการความเสียหาย</h6>
-                            <div class="d-flex align-items-baseline mb-1">
-                                <h2 class="mb-0 me-2 text-white fw-bold">
-                                    {{ number_format($dashboard['summary']['total_damage'] / 1000000, 1) }}</h2>
-                                <span class="text-white small">ล้านบาท</span>
+        <!-- 5. Closed Institutions (medium) -->
+        <div class="col-md-4">
+            <a href="{{ route('disaster.index', ['teaching_status' => 'closed']) }}" class="text-decoration-none">
+                <div class="card card-md h-100 border-0 shadow-sm hover-shadow transition-all position-relative overflow-hidden"
+                    style="background: rgba(220, 53, 69, 0.3) !important;">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-start mb-3">
+                            <div class="grow">
+                                <h6 class="text-white text-uppercase small fw-bold mb-2">ปิดการเรียนการสอน</h6>
+                                <div class="d-flex align-items-baseline mb-1">
+                                    <h2 class="mb-0 me-2 text-white fw-bold">
+                                        {{ number_format($dashboard['summary']['total_closed']) }}</h2>
+                                    <span class="text-white small">แห่ง</span>
+                                </div>
+                                <small class="text-white fw-bold">
+                                    <i class="bi bi-pie-chart-fill me-1"></i>{{ number_format($dashboard['summary']['closed_percent'], 1) }}%
+                                </small>
+                                <span class="text-white small d-block">ของผู้ได้รับผลกระทบ</span>
                             </div>
-                            <small class="text-white d-block">อาคาร + ครุภัณฑ์ + วัสดุ</small>
+                            <div class="stat-icon-circle bg-light bg-opacity-25">
+                                <i class="bi bi-x-circle-fill text-light fs-4"></i>
+                            </div>
                         </div>
-                        <div class="stat-icon-circle bg-light bg-opacity-25">
-                            <i class="bi bi-cash-stack text-light fs-4"></i>
+                        <div class="mt-3">
+                            <canvas id="sparkline2" height="80"></canvas>
                         </div>
                     </div>
-                    <div class="mt-3">
-                        <canvas id="sparkline5" height="70"></canvas>
+                    <div class="card-footer border-0 py-2 small text-white" style="background: rgba(220, 53, 69, 0.2) !important;">
+                        <i class="bi bi-graph-up me-1"></i>แนวโน้ม 7 วันล่าสุด
                     </div>
                 </div>
-                <div class="card-footer border-0 py-2 small text-white"
-                    style="background: rgba(108, 117, 125, 0.2) !important;">
-                    <i class="bi bi-graph-up me-1"></i>แนวโน้ม 7 วันล่าสุด
-                </div>
-            </div>
+            </a>
         </div>
 
-        <!-- 6. MOE Shelters -->
-        <div class="col-md-3">
+        <!-- 6. MOE Shelters (small) -->
+        <div class="col-md-4">
             <a href="{{ route('shelters.index') }}" class="text-decoration-none">
-                <div class="card h-100 border-0 shadow-sm hover-shadow transition-all position-relative overflow-hidden"
+                <div class="card card-sm h-100 border-0 shadow-sm hover-shadow transition-all position-relative overflow-hidden"
                     style="background: rgba(25, 135, 84, 0.3) !important;">
                     <div class="card-body">
                         <div class="d-flex justify-content-between align-items-start mb-3">
@@ -222,7 +221,7 @@
                             </div>
                         </div>
                         <div class="mt-3">
-                            <canvas id="sparkline6" height="40"></canvas>
+                            <canvas id="sparkline6" height="60"></canvas>
                         </div>
                     </div>
                     <div class="card-footer border-0 py-2 small text-white"
@@ -233,9 +232,9 @@
             </a>
         </div>
 
-        <!-- 7. MOE Kitchens -->
-        <div class="col-md-3">
-            <div class="card h-100 border-0 shadow-sm position-relative overflow-hidden"
+        <!-- 7. MOE Kitchens (small) -->
+        <div class="col-md-4">
+            <div class="card card-sm h-100 border-0 shadow-sm position-relative overflow-hidden"
                 style="background: rgba(253, 126, 20, 0.3) !important;">
                 <div class="card-body">
                     <div class="d-flex justify-content-between align-items-start mb-3">
@@ -253,7 +252,7 @@
                         </div>
                     </div>
                     <div class="mt-3">
-                        <canvas id="sparkline7" height="40"></canvas>
+                        <canvas id="sparkline7" height="60"></canvas>
                     </div>
                 </div>
                 <div class="card-footer border-0 py-2 small text-white"
@@ -263,9 +262,9 @@
             </div>
         </div>
 
-        <!-- 8. Severe Impact -->
-        <div class="col-md-3">
-            <div class="card h-100 border-0 shadow-sm position-relative overflow-hidden"
+        <!-- 8. Severe Impact (small) -->
+        <div class="col-md-4">
+            <div class="card card-sm h-100 border-0 shadow-sm position-relative overflow-hidden"
                 style="background: rgba(33, 37, 41, 0.3) !important;">
                 <div class="card-body">
                     <div class="d-flex justify-content-between align-items-start mb-3">
@@ -283,7 +282,7 @@
                         </div>
                     </div>
                     <div class="mt-3">
-                        <canvas id="sparkline8" height="40"></canvas>
+                        <canvas id="sparkline8" height="60"></canvas>
                     </div>
                 </div>
                 <div class="card-footer border-0 py-2 small text-white"
@@ -602,6 +601,19 @@
                 -webkit-backdrop-filter: blur(10px);
                 border: 1px solid rgba(255, 255, 255, 0.3) !important;
                 box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.15) !important;
+            }
+
+            /* Sizes for mixed layout */
+            .card-lg {
+                min-height: 260px;
+            }
+
+            .card-md {
+                min-height: 200px;
+            }
+
+            .card-sm {
+                min-height: 150px;
             }
 
             .card-header {
@@ -1047,10 +1059,10 @@
                                     tooltip: {
                                         enabled: true,
                                         displayColors: false,
-                                        backgroundColor: 'rgba(255, 255, 255, 0.9)',
-                                        titleColor: '#000',
-                                        bodyColor: '#000',
-                                        borderColor: '#dee2e6',
+                                        backgroundColor: 'rgba(0, 0, 0, 0.6)',
+                                        titleColor: '#fff',
+                                        bodyColor: '#fff',
+                                        borderColor: 'rgba(255,255,255,0.08)',
                                         borderWidth: 1,
                                         callbacks: {
                                             title: () => '',
@@ -1115,6 +1127,7 @@
                                         labels: {
                                             boxWidth: 10,
                                             boxHeight: 2,
+                                            color: '#fff',
                                             padding: 8,
                                             font: {
                                                 size: 9,
@@ -1127,10 +1140,10 @@
                                     tooltip: {
                                         enabled: true,
                                         displayColors: true,
-                                        backgroundColor: 'rgba(255, 255, 255, 0.95)',
-                                        titleColor: '#000',
-                                        bodyColor: '#000',
-                                        borderColor: '#dee2e6',
+                                        backgroundColor: 'rgba(0,0,0,0.6)',
+                                        titleColor: '#fff',
+                                        bodyColor: '#fff',
+                                        borderColor: 'rgba(255,255,255,0.08)',
                                         borderWidth: 1,
                                         padding: 10,
                                         callbacks: {
