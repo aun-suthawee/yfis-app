@@ -61,7 +61,11 @@ class ExportService
         $pdf = Pdf::loadView('disaster_reports.exports.dashboard', [
             'reports' => $dataset,
             'metrics' => $metrics,
-        ]);
+        ])
+        ->setPaper('a4', 'portrait')
+        ->setOption('isHtml5ParserEnabled', true)
+        ->setOption('isRemoteEnabled', true)
+        ->setOption('defaultFont', 'dejavusans');
 
         return $pdf->download($this->makeFileName('yfis-dashboard-summary', 'pdf'));
     }

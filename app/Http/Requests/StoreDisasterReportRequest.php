@@ -44,6 +44,10 @@ class StoreDisasterReportRequest extends FormRequest
 
     protected function prepareForValidation(): void
     {
+        if (!$this->has('reported_at')) {
+            $this->merge(['reported_at' => now()]);
+        }
+
         $this->merge([
             'damage_building' => $this->normalizeDecimal($this->input('damage_building')),
             'damage_equipment' => $this->normalizeDecimal($this->input('damage_equipment')),

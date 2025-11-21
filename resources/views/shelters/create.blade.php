@@ -17,18 +17,83 @@
                 @csrf
                 <div class="row g-3">
                     <div class="col-md-6">
-                        <label for="name" class="form-label">ชื่อศูนย์พักพิง <span class="text-danger">*</span></label>
-                        <input type="text" class="form-control @error('name') is-invalid @enderror" id="name" name="name" value="{{ old('name') }}" required>
+                        <label for="name" class="form-label">ชื่อศูนย์พักพิง / สถานศึกษา <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control @error('name') is-invalid @enderror" id="name" name="name" value="{{ old('name') }}" required placeholder="ระบุชื่อโรงเรียนหรือสถานที่">
                         @error('name')
                             <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
                     </div>
-                    <div class="col-md-6">
+                    
+                    <div class="col-md-3">
+                        <label for="district_id" class="form-label">อำเภอ <span class="text-danger">*</span></label>
+                        <select class="form-select @error('district_id') is-invalid @enderror" id="district_id" name="district_id" required>
+                            <option value="">เลือกอำเภอ</option>
+                            @foreach($districts as $district)
+                                <option value="{{ $district->id }}" {{ old('district_id') == $district->id ? 'selected' : '' }}>{{ $district->name }}</option>
+                            @endforeach
+                        </select>
+                        @error('district_id')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
+                    </div>
+
+                    <div class="col-md-3">
+                        <label for="affiliation_id" class="form-label">สังกัด <span class="text-danger">*</span></label>
+                        <select class="form-select @error('affiliation_id') is-invalid @enderror" id="affiliation_id" name="affiliation_id" required>
+                            <option value="">เลือกสังกัด</option>
+                            @foreach($affiliations as $affiliation)
+                                <option value="{{ $affiliation->id }}" {{ old('affiliation_id') == $affiliation->id ? 'selected' : '' }}>{{ $affiliation->name }}</option>
+                            @endforeach
+                        </select>
+                        @error('affiliation_id')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
+                    </div>
+
+                    <div class="col-md-3">
+                        <label for="status" class="form-label">สถานะ <span class="text-danger">*</span></label>
+                        <select class="form-select @error('status') is-invalid @enderror" id="status" name="status" required>
+                            <option value="closed" {{ old('status') == 'closed' ? 'selected' : '' }}>ปิด (ยังไม่เปิดรับ)</option>
+                            <option value="open" {{ old('status') == 'open' ? 'selected' : '' }}>เปิดให้บริการ</option>
+                        </select>
+                        @error('status')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
+                    </div>
+
+                    <div class="col-md-3">
                         <label for="capacity" class="form-label">จำนวนที่รองรับได้ (คน) <span class="text-danger">*</span></label>
                         <input type="number" class="form-control @error('capacity') is-invalid @enderror" id="capacity" name="capacity" value="{{ old('capacity', 0) }}" min="0" required>
                         @error('capacity')
                             <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
+                    </div>
+
+                    <div class="col-md-3">
+                        <label for="current_occupancy" class="form-label">จำนวนผู้เข้าพักปัจจุบัน (คน) <span class="text-danger">*</span></label>
+                        <input type="number" class="form-control @error('current_occupancy') is-invalid @enderror" id="current_occupancy" name="current_occupancy" value="{{ old('current_occupancy', 0) }}" min="0" required>
+                        @error('current_occupancy')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
+                    </div>
+
+                    <div class="col-md-3 d-flex align-items-end">
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="checkbox" value="1" id="is_kitchen" name="is_kitchen" {{ old('is_kitchen') ? 'checked' : '' }}>
+                            <label class="form-check-label fw-bold" for="is_kitchen">
+                                เป็นโรงครัว (ศธ.)
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label for="contact_name" class="form-label">ชื่อผู้ประสานงาน</label>
+                        <input type="text" class="form-control @error('contact_name') is-invalid @enderror" id="contact_name" name="contact_name" value="{{ old('contact_name') }}">
+                    </div>
+
+                    <div class="col-md-6">
+                        <label for="contact_phone" class="form-label">เบอร์โทรศัพท์</label>
+                        <input type="text" class="form-control @error('contact_phone') is-invalid @enderror" id="contact_phone" name="contact_phone" value="{{ old('contact_phone') }}">
                     </div>
 
                     <div class="col-12">

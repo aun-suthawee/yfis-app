@@ -11,7 +11,7 @@
         </a>
     </div>
 
-    @include('disaster_reports.partials.form', [
+    @include('disaster_reports.partials.form_modern', [
         'id' => 'edit-report-form',
         'action' => route('disaster.update', $report),
         'method' => 'PUT',

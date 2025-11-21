@@ -44,6 +44,12 @@ class UpdateDisasterReportRequest extends FormRequest
 
     protected function prepareForValidation(): void
     {
+        if (!$this->has('reported_at')) {
+            // If reported_at is missing (e.g. removed from form), keep the existing one or default to now
+            $report = $this->route('disaster_report');
+            $this->merge(['reported_at' => $report ? $report->reported_at : now()]);
+        }
+
         $this->merge([
             'damage_building' => $this->normalizeDecimal($this->input('damage_building')),
             'damage_equipment' => $this->normalizeDecimal($this->input('damage_equipment')),

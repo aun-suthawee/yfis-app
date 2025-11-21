@@ -3,20 +3,20 @@
 @section('content')
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
-            <h1 class="h3 mb-1 fw-bold text-primary-custom">เพิ่มรายงานภัยพิบัติ</h1>
-            <p class="text-muted mb-0">กรอกข้อมูลตามสถานการณ์จริงของหน่วยงาน</p>
+            <h1 class="h3 mb-1 fw-bold text-primary-custom">รายงานอุทกภัย</h1>
+            <p class="text-muted mb-0">กรอกข้อมูลตามสถานการณ์จริงของหน่วยงานท่าน</p>
         </div>
         <div class="d-flex gap-2">
             <button class="btn btn-outline-primary btn-sm d-flex align-items-center" data-bs-toggle="modal" data-bs-target="#shareModal">
                 <i class="bi bi-share me-2"></i> แชร์แบบฟอร์ม
             </button>
-            <a href="{{ route('disaster.index') }}" class="btn btn-outline-secondary btn-sm d-flex align-items-center">
+            {{-- <a href="{{ route('disaster.index') }}" class="btn btn-outline-secondary btn-sm d-flex align-items-center">
                 <i class="bi bi-arrow-left me-2"></i> กลับไปหน้ารายการ
-            </a>
+            </a> --}}
         </div>
     </div>
 
-    @include('disaster_reports.partials.form', [
+    @include('disaster_reports.partials.form_modern', [
         'id' => 'create-report-form',
         'action' => route('disaster.store'),
         'districts' => $districts,

@@ -21,7 +21,9 @@ class ShelterController extends Controller
      */
     public function create()
     {
-        return view('shelters.create');
+        $districts = \App\Models\District::all();
+        $affiliations = \App\Models\Affiliation::all();
+        return view('shelters.create', compact('districts', 'affiliations'));
     }
 
     /**
@@ -31,12 +33,21 @@ class ShelterController extends Controller
     {
         $request->validate([
             'name' => 'required|string|max:255',
+            'district_id' => 'required|exists:districts,id',
+            'affiliation_id' => 'required|exists:affiliations,id',
+            'status' => 'required|in:open,closed',
+            'capacity' => 'required|integer|min:0',
+            'current_occupancy' => 'required|integer|min:0',
             'latitude' => 'nullable|numeric',
             'longitude' => 'nullable|numeric',
-            'capacity' => 'required|integer|min:0',
+            'contact_name' => 'nullable|string|max:255',
+            'contact_phone' => 'nullable|string|max:20',
         ]);
 
-        Shelter::create($request->all());
+        $data = $request->all();
+        $data['is_kitchen'] = $request->has('is_kitchen');
+
+        Shelter::create($data);
 
         return redirect()->route('shelters.index')->with('status', 'เพิ่มข้อมูลศูนย์พักพิงเรียบร้อยแล้ว');
     }
@@ -54,7 +65,9 @@ class ShelterController extends Controller
      */
     public function edit(Shelter $shelter)
     {
-        return view('shelters.edit', compact('shelter'));
+        $districts = \App\Models\District::all();
+        $affiliations = \App\Models\Affiliation::all();
+        return view('shelters.edit', compact('shelter', 'districts', 'affiliations'));
     }
 
     /**
@@ -64,12 +77,21 @@ class ShelterController extends Controller
     {
         $request->validate([
             'name' => 'required|string|max:255',
+            'district_id' => 'required|exists:districts,id',
+            'affiliation_id' => 'required|exists:affiliations,id',
+            'status' => 'required|in:open,closed',
+            'capacity' => 'required|integer|min:0',
+            'current_occupancy' => 'required|integer|min:0',
             'latitude' => 'nullable|numeric',
             'longitude' => 'nullable|numeric',
-            'capacity' => 'required|integer|min:0',
+            'contact_name' => 'nullable|string|max:255',
+            'contact_phone' => 'nullable|string|max:20',
         ]);
 
-        $shelter->update($request->all());
+        $data = $request->all();
+        $data['is_kitchen'] = $request->has('is_kitchen');
+
+        $shelter->update($data);
 
         return redirect()->route('shelters.index')->with('status', 'แก้ไขข้อมูลศูนย์พักพิงเรียบร้อยแล้ว');
     }

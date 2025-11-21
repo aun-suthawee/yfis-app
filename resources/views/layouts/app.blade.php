@@ -41,8 +41,31 @@
         }
         body {
             font-family: 'Prompt', sans-serif;
-            background-color: var(--color-bg) !important;
+            background-color: var(--color-bg);
             color: #333;
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+        }
+        /* Background element only shown on dashboard page. Kept as a fixed element
+           so the body has no padding and the background sits behind everything.
+           We use a separate element (.page-background) instead of styling the body
+           so the background can be placed behind layout elements with z-index:-1. */
+        .page-background {
+            position: fixed;
+            inset: 0; /* top:0; right:0; bottom:0; left:0 */
+            background: url('{{ asset('images/yalaview2.jpg') }}') no-repeat center center;
+            background-size: cover;
+            z-index: -2; /* background itself sits behind overlay */
+            pointer-events: none; /* allow clicks through */
+        }
+        /* darker overlay to increase contrast - sits between image and the page */
+        .page-background::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.3);
+            z-index: -1;
         }
         #wrapper {
             overflow-x: hidden;
@@ -111,6 +134,18 @@
             border: none;
             border-radius: 12px;
             box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
+        }
+
+        /* Centered content wrapper used inside the page container.
+           Keeps the background fixed behind everything while the content
+           gets a max-width, margin:auto and normal padding. */
+        .centered-content {
+            max-width: 1200px;
+            margin-left: auto;
+            margin-right: auto;
+            padding-left: 1rem;
+            padding-right: 1rem;
+            width: 100%;
         }
         @media (min-width: 768px) {
             #sidebar-wrapper {
@@ -190,7 +225,12 @@
     </style>
     @stack('styles')
 </head>
-<body class="bg-light">
+<body class="{{ request()->routeIs('dashboard.index') ? 'dashboard-page' : 'bg-light' }}">
+
+    {{-- Dashboard background (fixed, behind everything) --}}
+    @if(request()->routeIs('dashboard.index'))
+        <div class="page-background" aria-hidden="true"></div>
+    @endif
 
 <div class="d-flex" id="wrapper">
     <!-- Sidebar -->
@@ -205,10 +245,10 @@
             <a class="list-group-item list-group-item-action {{ request()->routeIs('disaster.dataset') ? 'active' : '' }}" href="{{ route('disaster.dataset') }}">
                 <i class="bi bi-table me-2"></i> ชุดข้อมูล
             </a>
-            <a class="list-group-item list-group-item-action {{ request()->routeIs('shelters.*') ? 'active' : '' }}" href="{{ route('shelters.index') }}">
-                <i class="bi bi-house-heart me-2"></i> ศูนย์พักพิง
-            </a>
             @auth
+                <a class="list-group-item list-group-item-action {{ request()->routeIs('shelters.*') ? 'active' : '' }}" href="{{ route('shelters.index') }}">
+                    <i class="bi bi-house-heart me-2"></i> ศูนย์พักพิง
+                </a>
                 <a class="list-group-item list-group-item-action {{ request()->routeIs('disaster.index') ? 'active' : '' }}" href="{{ route('disaster.index') }}">
                     <i class="bi bi-file-earmark-text me-2"></i> จัดการรายงาน
                 </a>
@@ -248,16 +288,18 @@
             </div>
         </nav>
 
-        <div class="container pb-5">
-            @if(session('status'))
-                <div class="alert alert-success">{{ session('status') }}</div>
-            @endif
+        <div class="{{ request()->routeIs('dashboard.index') ? 'container-fluid' : 'container' }} pb-5 px-3">
+            <div class="centered-content">
+                @if(session('status'))
+                    <div class="alert alert-success">{{ session('status') }}</div>
+                @endif
 
-            @if(session('warning'))
-                <div class="alert alert-warning">{{ session('warning') }}</div>
-            @endif
+                @if(session('warning'))
+                    <div class="alert alert-warning">{{ session('warning') }}</div>
+                @endif
 
-            @yield('content')
+                @yield('content')
+            </div>
         </div>
     </div>
 </div>
@@ -272,11 +314,11 @@
         <i class="bi bi-table"></i>
         <span>ชุดข้อมูล</span>
     </a>
-    <a href="{{ route('shelters.index') }}" class="bottom-nav-item {{ request()->routeIs('shelters.*') ? 'active' : '' }}">
-        <i class="bi bi-house-heart"></i>
-        <span>ศูนย์พักพิง</span>
-    </a>
     @auth
+        <a href="{{ route('shelters.index') }}" class="bottom-nav-item {{ request()->routeIs('shelters.*') ? 'active' : '' }}">
+            <i class="bi bi-house-heart"></i>
+            <span>ศูนย์พักพิง</span>
+        </a>
         <a href="{{ route('disaster.index') }}" class="bottom-nav-item {{ (request()->routeIs('disaster.*') && !request()->routeIs('disaster.dataset')) ? 'active' : '' }}">
             <i class="bi bi-file-earmark-text"></i>
             <span>จัดการ</span>

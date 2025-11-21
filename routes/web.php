@@ -21,7 +21,7 @@ Route::middleware('guest')->group(function () {
 
 Route::post('logout', [AuthenticatedSessionController::class, 'destroy'])->name('logout');
 
-Route::get('/forms', [\App\Http\Controllers\FormSelectionController::class, 'index'])->name('forms.index');
+Route::get('/forms', [FormSelectionController::class, 'index'])->name('forms.index');
 
 Route::middleware('auth')->group(function () {
     Route::match(['get', 'post'], '/disaster-reports/filter', [DisasterReportController::class, 'filter'])
@@ -47,9 +47,10 @@ Route::middleware('auth')->group(function () {
     Route::post('/disaster-reports/bulk-publish', [DisasterReportController::class, 'bulkPublish'])
         ->name('disaster.bulk-publish');
 
-    Route::resource('disaster-reports', DisasterReportController::class)->names([
+    Route::get('/form/flood-report', [DisasterReportController::class, 'create'])->name('disaster.create');
+
+    Route::resource('disaster-reports', DisasterReportController::class)->except(['create'])->names([
         'index' => 'disaster.index',
-        'create' => 'disaster.create',
         'store' => 'disaster.store',
         'show' => 'disaster.show',
         'edit' => 'disaster.edit',
@@ -57,5 +58,6 @@ Route::middleware('auth')->group(function () {
         'destroy' => 'disaster.destroy',
     ]);
 
-    Route::resource('shelters', \App\Http\Controllers\ShelterController::class);
+    Route::get('/form/shelters', [\App\Http\Controllers\ShelterController::class, 'create'])->name('shelters.create');
+    Route::resource('shelters', \App\Http\Controllers\ShelterController::class)->except(['create']);
 });

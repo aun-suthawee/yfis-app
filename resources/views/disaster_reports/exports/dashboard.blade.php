@@ -1,21 +1,63 @@
 <!DOCTYPE html>
 <html lang="th">
 <head>
-    <meta charset="utf-8">
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
     <title>YFIS Dashboard Summary</title>
     <style>
-        body { font-family: "TH Sarabun New", DejaVu Sans, sans-serif; font-size: 14px; color: #333; }
-        h1 { text-align: center; margin-bottom: 10px; }
-        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-        th, td { border: 1px solid #999; padding: 6px 8px; text-align: left; }
-        th { background-color: #f0f2f5; }
-        .stats { margin-top: 20px; }
-        .stats div { margin-bottom: 6px; }
+        @page {
+            margin: 100px 50px 80px 50px;
+        }
+        body { 
+            font-family: "dejavusans", sans-serif; 
+            font-size: 14pt; 
+            color: #333; 
+            line-height: 1.5;
+        }
+        h1 { 
+            text-align: center; 
+            margin-bottom: 15px; 
+            font-size: 18pt;
+            font-weight: bold;
+        }
+        p {
+            text-align: center;
+            margin-bottom: 10px;
+            font-size: 14pt;
+        }
+        table { 
+            width: 100%; 
+            border-collapse: collapse; 
+            margin-top: 20px; 
+            font-size: 12pt;
+        }
+        th, td { 
+            border: 1px solid #999; 
+            padding: 6px; 
+            text-align: left; 
+            vertical-align: top;
+        }
+        th { 
+            background-color: #f0f2f5; 
+            font-weight: bold;
+        }
+        .stats { 
+            margin-top: 20px; 
+            padding: 15px;
+            background-color: #f8f9fa;
+            border-radius: 5px;
+        }
+        .stats div { 
+            margin-bottom: 8px; 
+            font-size: 13pt;
+        }
+        strong {
+            font-weight: bold;
+        }
     </style>
 </head>
 <body>
     <h1>สรุปข้อมูลภัยพิบัติ - Yala Flood Information System</h1>
-    <p>จัดทำเมื่อ {{ now()->format('d/m/Y H:i') }}</p>
+    <p>จัดทำเมื่อ: {{ now()->timezone('Asia/Bangkok')->format('d/m/Y H:i') }} น.</p>
 
     <div class="stats">
         <div>จำนวนหน่วยงานที่ได้รับผลกระทบ: <strong>{{ number_format($metrics['affected_units']) }}</strong></div>
