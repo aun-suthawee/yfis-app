@@ -70,42 +70,91 @@
         #wrapper {
             overflow-x: hidden;
         }
+        /* Modern glass-style sidebar */
         #sidebar-wrapper {
             min-height: 100vh;
             margin-left: -17rem;
             transition: margin .25s ease-out;
-            background-color: var(--color-primary);
             width: 17rem;
+            background: linear-gradient(180deg, rgba(54,116,181,0.94), rgba(86,140,206,0.92));
+            backdrop-filter: blur(6px);
+            -webkit-backdrop-filter: blur(6px);
+            border-right: 1px solid rgba(255,255,255,0.08);
+            box-shadow: 8px 0 30px rgba(0,0,0,0.14);
+            border-top-right-radius: 18px;
+            border-bottom-right-radius: 18px;
+            overflow: hidden;
         }
         #sidebar-wrapper .sidebar-heading {
-            padding: 1.5rem 1.25rem;
-            font-size: 1.4rem;
-            font-weight: 600;
-            background-color: rgba(0, 0, 0, 0.1);
-            color: white;
+            padding: 1.25rem 1.25rem;
+            font-size: 1.2rem;
+            font-weight: 700;
+            background: transparent;
+            color: rgba(255,255,255,0.98);
             text-align: center;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            justify-content: center;
         }
         #sidebar-wrapper .list-group {
-            width: 17rem;
+            width: 100%;
+            padding: 0.75rem;
+            box-sizing: border-box;
         }
         #sidebar-wrapper .list-group-item {
-            background-color: transparent;
-            color: rgba(255, 255, 255, 0.85);
+            position: relative;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            background: transparent;
+            color: rgba(255,255,255,0.9);
             border: none;
-            padding: 1rem 1.5rem;
-            font-weight: 400;
-            transition: all 0.2s;
+            padding: 0.9rem 1.1rem;
+            font-weight: 500;
+            border-radius: 10px;
+            margin: 0.3rem 0.45rem;
+            transition: all 0.18s ease;
+            overflow: hidden;
+        }
+        /* icon container */
+        #sidebar-wrapper .list-group-item .bi {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 38px;
+            height: 38px;
+            border-radius: 8px;
+            background: rgba(255,255,255,0.08);
+            color: rgba(255,255,255,0.95);
+            font-size: 1.15rem;
+            transition: transform 150ms ease, background 150ms ease, color 150ms ease;
+        }
+        #sidebar-wrapper .list-group-item:hover .bi {
+            transform: translateX(4px) scale(1.03);
+            background: rgba(255,255,255,0.12);
         }
         #sidebar-wrapper .list-group-item:hover {
-            background-color: rgba(255, 255, 255, 0.1);
-            color: white;
-            padding-left: 1.75rem;
+            transform: translateX(6px);
+            background: rgba(255,255,255,0.06);
+            color: #fff;
         }
+        /* active with subtle left indicator */
         #sidebar-wrapper .list-group-item.active {
-            background-color: var(--color-cream);
-            color: var(--color-primary);
-            font-weight: 600;
-            border-left: 5px solid var(--color-secondary);
+            background: linear-gradient(90deg, rgba(255,255,255,0.12), rgba(255,255,255,0.06));
+            color: #fff;
+            font-weight: 700;
+        }
+        #sidebar-wrapper .list-group-item.active::before {
+            content: '';
+            position: absolute;
+            left: 8px;
+            top: 8px;
+            bottom: 8px;
+            width: 6px;
+            border-radius: 6px;
+            background: linear-gradient(180deg, rgba(255,255,255,0.92), rgba(255,255,255,0.6));
+            box-shadow: 0 4px 12px rgba(0,0,0,0.25);
         }
         #page-content-wrapper {
             min-width: 100vw;
@@ -129,6 +178,24 @@
         }
         .navbar-light {
             background-color: white !important;
+        }
+        /* Make navbar transparent and remove border/shadow when used on dashboard
+           so it sits visually over the background image. Adjust colors for
+           readability (white text/icons). */
+        .dashboard-page .navbar-light {
+            background-color: transparent !important;
+            border-bottom: 0 !important;
+            box-shadow: none !important;
+        }
+        .dashboard-page .navbar-light .navbar-brand,
+        .dashboard-page .navbar-light .btn,
+        .dashboard-page .navbar-light .bi,
+        .dashboard-page .navbar-light .bottom-nav-item {
+            color: #ffffff !important;
+        }
+        /* Ensure the collapse toggle (hamburger) looks white on dashboard */
+        .dashboard-page #sidebarToggle {
+            color: #ffffff !important;
         }
         .card {
             border: none;
@@ -278,12 +345,12 @@
     <div id="page-content-wrapper">
         <nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom shadow-sm mb-4 py-3">
             <div class="container-fluid">
-                <button class="btn btn-link text-dark p-0" id="sidebarToggle">
+                <button class="btn btn-link p-0 {{ request()->routeIs('dashboard.index') ? 'text-white' : 'text-dark' }}" id="sidebarToggle">
                     <i class="bi bi-list fs-4"></i>
                 </button>
                 <div class="d-flex align-items-center ms-3">
                     <img src="{{ asset('images/logo.png') }}" alt="Logo" width="40" class="me-2 d-none d-md-block">
-                    <span class="navbar-brand fw-bold text-primary-custom mb-0 h1">Yala Flood Information System</span>
+                    <span class="navbar-brand fw-bold mb-0 h1 {{ request()->routeIs('dashboard.index') ? 'text-white' : 'text-primary-custom' }}">Yala Flood Information System</span>
                 </div>
             </div>
         </nav>
