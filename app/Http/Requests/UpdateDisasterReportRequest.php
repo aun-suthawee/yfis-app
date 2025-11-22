@@ -39,6 +39,7 @@ class UpdateDisasterReportRequest extends FormRequest
             'contact_phone' => ['required', 'string', 'max:32'],
             'latitude' => ['nullable', 'numeric', 'between:-90,90'],
             'longitude' => ['nullable', 'numeric', 'between:-180,180'],
+            'image' => ['nullable', 'image', 'mimes:jpeg,jpg,png', 'max:5120'],
         ];
     }
 

@@ -8,7 +8,7 @@ class StoreDisasterReportRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return $this->user()?->hasAnyRole(['admin', 'data-entry']) ?? false;
+        return $this->user()?->hasAnyRole(['admin', 'data-entry', 'yfis']) ?? false;
     }
 
     public function rules(): array
@@ -39,6 +39,7 @@ class StoreDisasterReportRequest extends FormRequest
             'contact_phone' => ['required', 'string', 'max:32'],
             'latitude' => ['nullable', 'numeric', 'between:-90,90'],
             'longitude' => ['nullable', 'numeric', 'between:-180,180'],
+            'image' => ['nullable', 'image', 'mimes:jpeg,jpg,png', 'max:5120'], // 5MB max
         ];
     }
 

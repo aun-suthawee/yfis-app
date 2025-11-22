@@ -5,6 +5,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DisasterReportController;
 use App\Http\Controllers\ExportController;
 use App\Http\Controllers\FormSelectionController;
+use App\Http\Controllers\KitchenController;
 use App\Http\Controllers\ShelterController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Api\SchoolController as ApiSchoolController;
@@ -89,4 +90,7 @@ Route::middleware('auth')->group(function () {
     // Shelters
     Route::get('/form/shelters', [ShelterController::class, 'create'])->name('shelters.create');
     Route::resource('shelters', ShelterController::class)->except(['create']);
+
+    // Kitchens
+    Route::resource('kitchens', KitchenController::class);
 });

@@ -12,7 +12,7 @@
     $isGet = $httpMethod === 'GET';
 @endphp
 
-<form id="{{ $formId }}" action="{{ $action }}" method="POST" class="needs-validation" novalidate>
+<form id="{{ $formId }}" action="{{ $action }}" method="POST" enctype="multipart/form-data" class="needs-validation" novalidate>
     @csrf
     @unless(in_array($httpMethod, ['GET', 'POST'], true))
         @method($httpMethod)
@@ -281,6 +281,41 @@
 
             <!-- Map Container -->
             <div id="map" style="height: 400px; width: 100%; border-radius: 16px; z-index: 1;" class="shadow-sm border"></div>
+        </div>
+    </div>
+
+    <!-- Image Upload Section -->
+    <div class="row g-4 mb-4">
+        <div class="col-12">
+            <div class="card shadow-sm border-0 rounded-4">
+                <div class="card-header bg-white py-3 border-bottom-0 rounded-top-4">
+                    <h5 class="mb-0 fw-bold text-primary"><i class="bi bi-image me-2"></i>รูปภาพประกอบ (ถ้ามี)</h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label class="form-label text-muted small fw-bold" for="image">อัปโหลดรูปภาพ</label>
+                        <input type="file" class="form-control bg-light border-0" id="image" name="image" accept="image/jpeg,image/jpg,image/png" onchange="previewImage(event)">
+                        <small class="text-muted"><i class="bi bi-info-circle me-1"></i>รองรับ: JPG, PNG (สูงสุด 5MB)</small>
+                        <x-input-error name="image" />
+                    </div>
+                    
+                    @if($report && $report->image)
+                        <div class="mb-3">
+                            <label class="form-label text-muted small fw-bold">รูปภาพปัจจุบัน</label>
+                            <div id="currentImagePreview">
+                                <img src="{{ asset('storage/' . $report->image) }}" class="img-fluid rounded shadow-sm" style="max-height: 300px">
+                                <p class="text-muted small mt-2"><i class="bi bi-info-circle me-1"></i>อัปโหลดรูปใหม่เพื่อแทนที่รูปเดิม</p>
+                            </div>
+                        </div>
+                    @endif
+                    
+                    <div id="imagePreview" style="display: none;" class="mt-3">
+                        <label class="form-label text-muted small fw-bold">ตัวอย่างรูปภาพใหม่</label>
+                        <br>
+                        <img id="imagePreviewImg" src="" class="img-fluid rounded shadow-sm" style="max-height: 300px">
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -661,6 +696,24 @@
                         suggestionsBox.style.display = 'none';
                     }
                 });
+                
+                // Image preview function
+                window.previewImage = function(event) {
+                    const file = event.target.files[0];
+                    const preview = document.getElementById('imagePreview');
+                    const previewImg = document.getElementById('imagePreviewImg');
+                    
+                    if (file) {
+                        const reader = new FileReader();
+                        reader.onload = function(e) {
+                            previewImg.src = e.target.result;
+                            preview.style.display = 'block';
+                        };
+                        reader.readAsDataURL(file);
+                    } else {
+                        preview.style.display = 'none';
+                    }
+                };
             });
         </script>
         <style>

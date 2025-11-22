@@ -36,6 +36,7 @@ class DisasterReport extends Model
         'contact_phone',
         'latitude',
         'longitude',
+        'image',
         'form_hash',
         'is_published',
     ];

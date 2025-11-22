@@ -2,35 +2,34 @@
 
 @section('content')
     <div class="mb-4">
-        <h1 class="h3 mb-1 fw-bold text-primary-custom">แก้ไขข้อมูลศูนย์พักพิง</h1>
+        <h1 class="h3 mb-1 fw-bold text-primary-custom">เพิ่มโรงครัว</h1>
         <nav aria-label="breadcrumb">
             <ol class="breadcrumb">
-                <li class="breadcrumb-item"><a href="{{ route('shelters.index') }}">ศูนย์พักพิง</a></li>
-                <li class="breadcrumb-item active" aria-current="page">แก้ไขข้อมูล</li>
+                <li class="breadcrumb-item"><a href="{{ route('kitchens.index') }}">รายงานโรงครัว</a></li>
+                <li class="breadcrumb-item active" aria-current="page">เพิ่มข้อมูล</li>
             </ol>
         </nav>
     </div>
 
     <div class="card shadow-sm">
         <div class="card-body">
-            <form action="{{ route('shelters.update', $shelter) }}" method="POST">
+            <form action="{{ route('kitchens.store') }}" method="POST">
                 @csrf
-                @method('PUT')
                 <div class="row g-3">
                     <div class="col-md-6">
-                        <label for="name" class="form-label">ชื่อศูนย์พักพิง / สถานศึกษา <span class="text-danger">*</span></label>
-                        <input type="text" class="form-control @error('name') is-invalid @enderror" id="name" name="name" value="{{ old('name', $shelter->name) }}" required>
+                        <label for="name" class="form-label">ชื่อโรงครัว / สถานที่ <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control @error('name') is-invalid @enderror" id="name" name="name" value="{{ old('name') }}" required placeholder="ระบุชื่อโรงครัว">
                         @error('name')
                             <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
                     </div>
-
+                    
                     <div class="col-md-3">
                         <label for="district_id" class="form-label">อำเภอ <span class="text-danger">*</span></label>
                         <select class="form-select @error('district_id') is-invalid @enderror" id="district_id" name="district_id" required>
                             <option value="">เลือกอำเภอ</option>
                             @foreach($districts as $district)
-                                <option value="{{ $district->id }}" {{ old('district_id', $shelter->district_id) == $district->id ? 'selected' : '' }}>{{ $district->name }}</option>
+                                <option value="{{ $district->id }}" {{ old('district_id') == $district->id ? 'selected' : '' }}>{{ $district->name }}</option>
                             @endforeach
                         </select>
                         @error('district_id')
@@ -43,7 +42,7 @@
                         <select class="form-select @error('affiliation_id') is-invalid @enderror" id="affiliation_id" name="affiliation_id" required>
                             <option value="">เลือกสังกัด</option>
                             @foreach($affiliations as $affiliation)
-                                <option value="{{ $affiliation->id }}" {{ old('affiliation_id', $shelter->affiliation_id) == $affiliation->id ? 'selected' : '' }}>{{ $affiliation->name }}</option>
+                                <option value="{{ $affiliation->id }}" {{ old('affiliation_id') == $affiliation->id ? 'selected' : '' }}>{{ $affiliation->name }}</option>
                             @endforeach
                         </select>
                         @error('affiliation_id')
@@ -54,44 +53,80 @@
                     <div class="col-md-3">
                         <label for="status" class="form-label">สถานะ <span class="text-danger">*</span></label>
                         <select class="form-select @error('status') is-invalid @enderror" id="status" name="status" required>
-                            <option value="closed" {{ old('status', $shelter->status) == 'closed' ? 'selected' : '' }}>ปิด (ยังไม่เปิดรับ)</option>
-                            <option value="open" {{ old('status', $shelter->status) == 'open' ? 'selected' : '' }}>เปิดให้บริการ</option>
+                            <option value="closed" {{ old('status') == 'closed' ? 'selected' : '' }}>ปิด (ยังไม่เปิดรับ)</option>
+                            <option value="open" {{ old('status') == 'open' ? 'selected' : '' }}>เปิดให้บริการ</option>
                         </select>
                         @error('status')
                             <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
                     </div>
 
-                    <div class="col-md-3">
-                        <label for="capacity" class="form-label">จำนวนที่รองรับได้ (คน) <span class="text-danger">*</span></label>
-                        <input type="number" class="form-control @error('capacity') is-invalid @enderror" id="capacity" name="capacity" value="{{ old('capacity', $shelter->capacity) }}" min="0" required>
-                        @error('capacity')
-                            <div class="invalid-feedback">{{ $message }}</div>
-                        @enderror
-                    </div>
-
-                    <div class="col-md-3">
-                        <label for="current_occupancy" class="form-label">จำนวนผู้เข้าพักปัจจุบัน (คน) <span class="text-danger">*</span></label>
-                        <input type="number" class="form-control @error('current_occupancy') is-invalid @enderror" id="current_occupancy" name="current_occupancy" value="{{ old('current_occupancy', $shelter->current_occupancy) }}" min="0" required>
-                        @error('current_occupancy')
-                            <div class="invalid-feedback">{{ $message }}</div>
-                        @enderror
-                    </div>
-
                     <div class="col-md-6">
                         <label for="contact_name" class="form-label">ชื่อผู้ประสานงาน</label>
-                        <input type="text" class="form-control @error('contact_name') is-invalid @enderror" id="contact_name" name="contact_name" value="{{ old('contact_name', $shelter->contact_name) }}">
+                        <input type="text" class="form-control @error('contact_name') is-invalid @enderror" id="contact_name" name="contact_name" value="{{ old('contact_name') }}">
+                        @error('contact_name')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
                     </div>
 
-                    <div class="col-md-6">
+                    <div class="col-md-3">
                         <label for="contact_phone" class="form-label">เบอร์โทรศัพท์</label>
-                        <input type="text" class="form-control @error('contact_phone') is-invalid @enderror" id="contact_phone" name="contact_phone" value="{{ old('contact_phone', $shelter->contact_phone) }}">
+                        <input type="text" class="form-control @error('contact_phone') is-invalid @enderror" id="contact_phone" name="contact_phone" value="{{ old('contact_phone') }}">
+                        @error('contact_phone')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
                     </div>
 
                     <div class="col-12">
-                        <label class="form-label">ปักหมุดตำแหน่ง (ค้นหา หรือ คลิกบนแผนที่)</label>
+                        <label class="form-label fw-bold">สิ่งอำนวยความสะดวก</label>
+                        <div class="row g-3">
+                            <div class="col-md-4">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" value="1" id="facilities_water" name="facilities[water]" {{ old('facilities.water') ? 'checked' : '' }}>
+                                    <label class="form-check-label" for="facilities_water">
+                                        <i class="bi bi-droplet-fill text-primary"></i> น้ำดื่ม
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" value="1" id="facilities_food" name="facilities[food]" {{ old('facilities.food') ? 'checked' : '' }}>
+                                    <label class="form-check-label" for="facilities_food">
+                                        <i class="bi bi-cup-hot-fill text-warning"></i> อาหาร
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label for="water_bottles" class="form-label">ปริมาณน้ำดื่ม (ขวด)</label>
+                        <input type="number" class="form-control @error('water_bottles') is-invalid @enderror" id="water_bottles" name="water_bottles" value="{{ old('water_bottles', 0) }}" min="0">
+                        @error('water_bottles')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
+                    </div>
+
+                    <div class="col-md-6">
+                        <label for="food_boxes" class="form-label">ปริมาณอาหาร (กล่อง)</label>
+                        <input type="number" class="form-control @error('food_boxes') is-invalid @enderror" id="food_boxes" name="food_boxes" value="{{ old('food_boxes', 0) }}" min="0">
+                        @error('food_boxes')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
+                    </div>
+
+                    <div class="col-12">
+                        <label for="notes" class="form-label">หมายเหตุ</label>
+                        <textarea class="form-control @error('notes') is-invalid @enderror" id="notes" name="notes" rows="3" placeholder="ระบุข้อมูลเพิ่มเติม">{{ old('notes') }}</textarea>
+                        @error('notes')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
+                    </div>
+
+                    <div class="col-12">
+                        <label class="form-label">ปักหมุดตำแหน่ง (คลิกบนแผนที่)</label>
                         <div class="input-group mb-2 position-relative">
-                            <input type="text" id="location-search" class="form-control" placeholder="พิมพ์ชื่อสถานที่เพื่อค้นหา (เช่น โรงเรียนคณะราษฎรบำรุง จังหวัดยะลา)" autocomplete="off">
+                            <input type="text" id="location-search" class="form-control" placeholder="พิมพ์ชื่อสถานที่เพื่อค้นหา" autocomplete="off">
                             <button class="btn btn-outline-secondary" type="button" id="btn-search">ค้นหา</button>
                             <div id="search-suggestions" class="list-group position-absolute w-100 shadow-sm" style="top: 100%; z-index: 1000; display: none; max-height: 200px; overflow-y: auto;"></div>
                         </div>
@@ -99,18 +134,18 @@
                         <div class="row mt-2">
                             <div class="col-md-6">
                                 <label for="latitude" class="form-label small text-muted">ละติจูด</label>
-                                <input type="text" class="form-control form-control-sm bg-light" id="latitude" name="latitude" value="{{ old('latitude', $shelter->latitude) }}" readonly>
+                                <input type="text" class="form-control form-control-sm bg-light" id="latitude" name="latitude" value="{{ old('latitude') }}" readonly>
                             </div>
                             <div class="col-md-6">
                                 <label for="longitude" class="form-label small text-muted">ลองจิจูด</label>
-                                <input type="text" class="form-control form-control-sm bg-light" id="longitude" name="longitude" value="{{ old('longitude', $shelter->longitude) }}" readonly>
+                                <input type="text" class="form-control form-control-sm bg-light" id="longitude" name="longitude" value="{{ old('longitude') }}" readonly>
                             </div>
                         </div>
                     </div>
 
                     <div class="col-12 text-end mt-4">
-                        <a href="{{ route('shelters.index') }}" class="btn btn-secondary me-2">ยกเลิก</a>
-                        <button type="submit" class="btn btn-primary">บันทึกการแก้ไข</button>
+                        <a href="{{ route('kitchens.index') }}" class="btn btn-secondary me-2">ยกเลิก</a>
+                        <button type="submit" class="btn btn-primary">บันทึกข้อมูล</button>
                     </div>
                 </div>
             </form>
@@ -126,9 +161,8 @@
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            var defaultLat = {{ $shelter->latitude ?? 6.541147 }};
-            var defaultLng = {{ $shelter->longitude ?? 101.280393 }};
-            var map = L.map('map').setView([defaultLat, defaultLng], {{ $shelter->latitude ? 13 : 10 }});
+            // Default to Yala coordinates
+            var map = L.map('map').setView([6.541147, 101.280393], 10);
 
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
                 attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
@@ -136,10 +170,13 @@
 
             var marker;
 
-            // Initial marker
-            @if($shelter->latitude && $shelter->longitude)
-                marker = L.marker([{{ $shelter->latitude }}, {{ $shelter->longitude }}]).addTo(map);
-            @endif
+            // If old values exist, set marker
+            var oldLat = "{{ old('latitude') }}";
+            var oldLng = "{{ old('longitude') }}";
+            if (oldLat && oldLng) {
+                marker = L.marker([oldLat, oldLng]).addTo(map);
+                map.setView([oldLat, oldLng], 13);
+            }
 
             map.on('click', function(e) {
                 var lat = e.latlng.lat;
@@ -164,32 +201,11 @@
                 document.getElementById('longitude').value = lon.toFixed(6);
             }
 
-            // 1. Auto-search from Shelter Name
-            const nameInput = document.getElementById('name');
-            let nameDebounce;
-            nameInput.addEventListener('input', function() {
-                clearTimeout(nameDebounce);
-                const query = this.value;
-                if (query.length < 3) return;
-
-                nameDebounce = setTimeout(() => {
-                    fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=1&countrycodes=th&accept-language=th`)
-                        .then(response => response.json())
-                        .then(data => {
-                            if (data && data.length > 0) {
-                                updateMap(parseFloat(data[0].lat), parseFloat(data[0].lon));
-                            }
-                        })
-                        .catch(console.error);
-                }, 1000); // 1s delay for name typing
-            });
-
-            // 2. Search Box Functionality
+            // Search functionality
             const searchInput = document.getElementById('location-search');
             const suggestionsBox = document.getElementById('search-suggestions');
             let debounceTimer;
 
-            // Autocomplete & Auto-update
             searchInput.addEventListener('input', function() {
                 clearTimeout(debounceTimer);
                 const query = this.value;
@@ -205,10 +221,6 @@
                         .then(data => {
                             suggestionsBox.innerHTML = '';
                             if (data.length > 0) {
-                                // Auto-update map to the first result
-                                updateMap(parseFloat(data[0].lat), parseFloat(data[0].lon));
-
-                                // Show suggestions
                                 data.forEach(item => {
                                     const a = document.createElement('a');
                                     a.href = '#';
@@ -228,7 +240,7 @@
                             }
                         })
                         .catch(error => console.error('Error fetching suggestions:', error));
-                }, 800); // 800ms debounce
+                }, 800);
             });
 
             // Hide suggestions when clicking outside
@@ -246,18 +258,7 @@
                     .then(response => response.json())
                     .then(data => {
                         if (data && data.length > 0) {
-                            var lat = parseFloat(data[0].lat);
-                            var lon = parseFloat(data[0].lon);
-
-                            if (marker) {
-                                map.removeLayer(marker);
-                            }
-
-                            marker = L.marker([lat, lon]).addTo(map);
-                            map.setView([lat, lon], 16);
-
-                            document.getElementById('latitude').value = lat.toFixed(6);
-                            document.getElementById('longitude').value = lon.toFixed(6);
+                            updateMap(parseFloat(data[0].lat), parseFloat(data[0].lon));
                             suggestionsBox.style.display = 'none';
                         } else {
                             alert('ไม่พบสถานที่ที่ค้นหา');

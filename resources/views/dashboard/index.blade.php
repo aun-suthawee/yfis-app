@@ -1316,14 +1316,34 @@
                                     severityClass = 'text-warning';
                                 }
 
-                                // Create custom icon
-                                const customIcon = L.divIcon({
-                                    className: 'custom-pin',
-                                    html: `<i class="bi bi-geo-alt-fill" style="color: ${pinColor}; font-size: 2rem; filter: drop-shadow(0 2px 2px rgba(0,0,0,0.3));"></i>`,
-                                    iconSize: [32, 32],
-                                    iconAnchor: [16, 32],
-                                    popupAnchor: [0, -32]
-                                });
+                                // Create custom icon - use image if available, otherwise pin
+                                let customIcon;
+                                if (point.image) {
+                                    customIcon = L.divIcon({
+                                        className: 'custom-image-marker',
+                                        html: `<div style="
+                                            background-image: url('${point.image}');
+                                            width: 45px;
+                                            height: 45px;
+                                            border-radius: 50%;
+                                            border: 3px solid ${pinColor};
+                                            background-size: cover;
+                                            background-position: center;
+                                            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+                                        "></div>`,
+                                        iconSize: [45, 45],
+                                        iconAnchor: [22.5, 22.5],
+                                        popupAnchor: [0, -22]
+                                    });
+                                } else {
+                                    customIcon = L.divIcon({
+                                        className: 'custom-pin',
+                                        html: `<i class="bi bi-geo-alt-fill" style="color: ${pinColor}; font-size: 2rem; filter: drop-shadow(0 2px 2px rgba(0,0,0,0.3));"></i>`,
+                                        iconSize: [32, 32],
+                                        iconAnchor: [16, 32],
+                                        popupAnchor: [0, -32]
+                                    });
+                                }
 
                                 const marker = L.marker([point.lat, point.lng], {
                                     icon: customIcon
@@ -1335,6 +1355,7 @@
                                     <span class="badge bg-${point.status === 'เสร็จสิ้น' ? 'success' : (point.status === 'กำลังดำเนินการ' ? 'warning' : 'danger')} mb-2">
                                         ${point.status}
                                     </span>
+                                    ${point.image ? `<div class="mb-2"><img src="${point.image}" class="img-fluid rounded" style="max-width: 200px; max-height: 150px; object-fit: cover;"></div>` : ''}
                                     <div class="small text-muted">
                                         มูลค่าความเสียหาย: <span class="fw-bold ${severityClass}">${new Intl.NumberFormat('th-TH').format(point.damage)}</span> บาท
                                     </div>
@@ -1396,6 +1417,58 @@
 
                                 marker.bindPopup(popupContent);
                                 marker.bindTooltip(`<strong>${shelter.name}</strong>`, {
+                                    permanent: false,
+                                    direction: 'top',
+                                    className: 'custom-tooltip'
+                                });
+                            }
+                        });
+
+                        // Add Kitchens Markers
+                        const kitchens = @json($kitchens ?? []);
+                        kitchens.forEach(kitchen => {
+                            if (kitchen.latitude && kitchen.longitude) {
+                                const isOpen = kitchen.status === 'open';
+                                const color = isOpen ? '#198754' : '#dc3545'; // Green for open, Red for closed
+                                
+                                const kitchenIcon = L.divIcon({
+                                    className: 'custom-pin-kitchen',
+                                    html: `<i class="bi bi-cup-hot-fill" style="color: ${color}; font-size: 2rem; filter: drop-shadow(0 2px 2px rgba(0,0,0,0.3));"></i>`,
+                                    iconSize: [32, 32],
+                                    iconAnchor: [16, 32],
+                                    popupAnchor: [0, -32]
+                                });
+
+                                const marker = L.marker([kitchen.latitude, kitchen.longitude], {
+                                        icon: kitchenIcon
+                                    })
+                                    .addTo(map);
+
+                                const popupContent = `
+                                <div class="p-2">
+                                    <h6 class="fw-bold mb-1" style="color: ${color}"><i class="bi bi-cup-hot-fill me-1"></i> ${kitchen.name}</h6>
+                                    <div class="mb-2">
+                                        <span class="badge bg-${isOpen ? 'success' : 'danger'}">
+                                            ${isOpen ? 'เปิดให้บริการ' : 'ปิด'}
+                                        </span>
+                                    </div>
+                                    <div class="small text-muted mb-2">
+                                        <div><i class="bi bi-droplet-fill text-primary"></i> น้ำดื่ม: <strong>${new Intl.NumberFormat('th-TH').format(kitchen.water_bottles || 0)}</strong> ขวด</div>
+                                        <div><i class="bi bi-box-seam text-warning"></i> อาหาร: <strong>${new Intl.NumberFormat('th-TH').format(kitchen.food_boxes || 0)}</strong> กล่อง</div>
+                                    </div>
+                                    <div class="d-grid gap-2">
+                                        <a href="/kitchens/${kitchen.id}" class="btn btn-sm btn-outline-primary">
+                                            <i class="bi bi-info-circle"></i> ดูรายละเอียด
+                                        </a>
+                                        <a href="https://www.google.com/maps/search/?api=1&query=${kitchen.latitude},${kitchen.longitude}" target="_blank" class="btn btn-sm btn-outline-success">
+                                            <i class="bi bi-geo-alt"></i> นำทาง
+                                        </a>
+                                    </div>
+                                </div>
+                            `;
+
+                                marker.bindPopup(popupContent);
+                                marker.bindTooltip(`<strong>${kitchen.name}</strong>`, {
                                     permanent: false,
                                     direction: 'top',
                                     className: 'custom-tooltip'

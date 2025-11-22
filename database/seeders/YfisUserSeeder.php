@@ -13,9 +13,9 @@ class YfisUserSeeder extends Seeder
      */
     public function run(): void
     {
-        // Create 14 YFIS users (YFIS01 to YFIS14)
-        // Each user is assigned to a different affiliation (1-14)
-        for ($i = 1; $i <= 14; $i++) {
+        // Create 23 YFIS users (YFIS01 to YFIS23)
+        // Each user is assigned to a different affiliation (1-23)
+        for ($i = 1; $i <= 23; $i++) {
             $username = sprintf('YFIS%02d', $i);
             
             User::create([
@@ -30,6 +30,6 @@ class YfisUserSeeder extends Seeder
             ]);
         }
 
-        $this->command->info('Created 14 YFIS users (YFIS01 to YFIS14) with password: 123456');
+        $this->command->info('Created 23 YFIS users (YFIS01 to YFIS23) with password: 123456');
     }
 }

@@ -146,6 +146,13 @@ class DisasterReportController extends Controller
         ]);
     }
 
+    public function publish(DisasterReport $disasterReport): RedirectResponse
+    {
+        $this->service->publish($disasterReport);
+
+        return back()->with('status', __('เผยแพร่รายงานเรียบร้อยแล้ว'));
+    }
+
     public function unpublish(DisasterReport $disasterReport): RedirectResponse
     {
         $this->service->unpublish($disasterReport);

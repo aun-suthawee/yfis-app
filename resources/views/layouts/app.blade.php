@@ -317,20 +317,30 @@
             <a class="list-group-item list-group-item-action {{ request()->routeIs('dashboard.index') ? 'active' : '' }}" href="{{ route('dashboard.index') }}">
                 <i class="bi bi-speedometer2 me-2"></i> แดชบอร์ด
             </a>
-            <a class="list-group-item list-group-item-action {{ request()->routeIs('disaster.dataset') ? 'active' : '' }}" href="{{ route('disaster.dataset') }}">
-                <i class="bi bi-table me-2"></i> ชุดข้อมูล
-            </a>
+            
+            <hr class="border-white opacity-10 my-2">
+            
             @auth
-                <a class="list-group-item list-group-item-action {{ request()->routeIs('shelters.*') ? 'active' : '' }}" href="{{ route('shelters.index') }}">
-                    <i class="bi bi-house-heart me-2"></i> ศูนย์พักพิง
-                </a>
                 <a class="list-group-item list-group-item-action {{ request()->routeIs('disaster.index') ? 'active' : '' }}" href="{{ route('disaster.index') }}">
-                    <i class="bi bi-file-earmark-text me-2"></i> จัดการรายงาน
+                    <i class="bi bi-exclamation-triangle me-2"></i> รายงานภัยพิบัติ
                 </a>
-                <!-- <a class="list-group-item list-group-item-action {{ request()->routeIs('profile.*') ? 'active' : '' }}" href="{{ route('profile.edit') }}">
-                    <i class="bi bi-person-circle me-2"></i> โปรไฟล์
-                </a> -->
+                <a class="list-group-item list-group-item-action {{ request()->routeIs('shelters.*') ? 'active' : '' }}" href="{{ route('shelters.index') }}">
+                    <i class="bi bi-house-heart me-2"></i> รายงานศูนย์พักพิง
+                </a>
+                <a class="list-group-item list-group-item-action {{ request()->routeIs('kitchens.*') ? 'active' : '' }}" href="{{ route('kitchens.index') }}">
+                    <i class="bi bi-cup-hot me-2"></i> รายงานโรงครัว
+                </a>
             @endauth
+            
+            <hr class="border-white opacity-10 my-2">
+            
+            @auth
+                <a class="list-group-item list-group-item-action {{ request()->routeIs('disaster.dataset') ? 'active' : '' }}" href="{{ route('disaster.dataset') }}">
+                    <i class="bi bi-table me-2"></i> ชุดข้อมูล
+                </a>
+            @endauth
+            
+            <hr class="border-white opacity-10 my-2">
         </div>
         
         <div class="mt-auto p-4 border-top border-white-10 text-white">
@@ -417,13 +427,13 @@
         <span>ชุดข้อมูล</span>
     </a>
     @auth
-        <a href="{{ route('shelters.index') }}" class="bottom-nav-item {{ request()->routeIs('shelters.*') ? 'active' : '' }}">
-            <i class="bi bi-house-heart"></i>
-            <span>ศูนย์พักพิง</span>
-        </a>
         <a href="{{ route('disaster.index') }}" class="bottom-nav-item {{ (request()->routeIs('disaster.*') && !request()->routeIs('disaster.dataset')) ? 'active' : '' }}">
-            <i class="bi bi-file-earmark-text"></i>
-            <span>จัดการ</span>
+            <i class="bi bi-exclamation-triangle"></i>
+            <span>ภัยพิบัติ</span>
+        </a>
+        <a href="{{ route('kitchens.index') }}" class="bottom-nav-item {{ request()->routeIs('kitchens.*') ? 'active' : '' }}">
+            <i class="bi bi-cup-hot"></i>
+            <span>โรงครัว</span>
         </a>
         <button type="button" class="bottom-nav-item" data-bs-toggle="modal" data-bs-target="#profileModal">
             <i class="bi bi-person-circle"></i>

@@ -16,11 +16,11 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        $this->call([
-            DistrictSeeder::class,
-            AffiliationSeeder::class,
-            DisasterReportSeeder::class,
-        ]);
+        // $this->call([
+        //     DistrictSeeder::class,
+        //     AffiliationSeeder::class,
+        //     DisasterReportSeeder::class,
+        // ]);
 
         User::updateOrCreate(
             ['email' => 'admin@yala-flood.peo'],
@@ -31,15 +31,6 @@ class DatabaseSeeder extends Seeder
             ]
         );
 
-        User::updateOrCreate(
-            ['email' => 'data-entry@yala-flood.peo'],
-            [
-                'name' => 'Data Entry User',
-                'role' => 'data-entry',
-                'password' => Hash::make('ChangeMe123!'),
-            ]
-        );
-
-        User::factory()->count(3)->create();
+        User::factory()->count(1)->create();
     }
 }

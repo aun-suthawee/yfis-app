@@ -77,15 +77,6 @@
                         @enderror
                     </div>
 
-                    <div class="col-md-3 d-flex align-items-end">
-                        <div class="form-check mb-2">
-                            <input class="form-check-input" type="checkbox" value="1" id="is_kitchen" name="is_kitchen" {{ old('is_kitchen') ? 'checked' : '' }}>
-                            <label class="form-check-label fw-bold" for="is_kitchen">
-                                เป็นโรงครัว (ศธ.)
-                            </label>
-                        </div>
-                    </div>
-
                     <div class="col-md-6">
                         <label for="contact_name" class="form-label">ชื่อผู้ประสานงาน</label>
                         <input type="text" class="form-control @error('contact_name') is-invalid @enderror" id="contact_name" name="contact_name" value="{{ old('contact_name') }}">

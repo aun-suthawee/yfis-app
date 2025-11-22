@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Requests\FilterDisasterReportRequest;
 use App\Models\Affiliation;
 use App\Models\District;
+use App\Models\Kitchen;
 use App\Models\Shelter;
 use App\Services\DisasterReportService;
 use App\Services\WeatherService;
@@ -53,6 +54,7 @@ class DashboardController extends Controller
             'districts' => District::orderBy('name')->get(),
             'affiliations' => Affiliation::orderBy('name')->get(),
             'shelters' => Shelter::whereNotNull('latitude')->whereNotNull('longitude')->get(),
+            'kitchens' => Kitchen::whereNotNull('latitude')->whereNotNull('longitude')->get(),
         ]);
     }
 

@@ -14,7 +14,8 @@ class DisasterReportService
 {
     public function __construct(
         private DisasterReportRepository $repository,
-        private ActivityLogger $activityLogger
+        private ActivityLogger $activityLogger,
+        private ImageService $imageService
     ) {
     }
 
@@ -109,13 +110,15 @@ class DisasterReportService
             'mapPoints' => $baseQuery->clone()
                 ->whereNotNull('latitude')
                 ->whereNotNull('longitude')
-                ->get(['organization_name', 'current_status', 'damage_total_request as damage', 'latitude as lat', 'longitude as lng'])
+                ->get(['id', 'organization_name', 'current_status', 'damage_total_request as damage', 'latitude as lat', 'longitude as lng', 'image'])
                 ->map(fn ($item) => [
+                    'id' => $item->id,
                     'organization' => $item->organization_name,
                     'status' => $item->current_status,
                     'damage' => (float) $item->damage,
                     'lat' => (float) $item->lat,
                     'lng' => (float) $item->lng,
+                    'image' => $item->image ? asset('storage/' . $item->image) : null,
                 ]),
             'sparklines' => $this->buildSparklineTimelines($filters),
         ];
@@ -123,6 +126,13 @@ class DisasterReportService
 
     public function store(array $data): DisasterReport
     {
+        // Handle image upload if present
+        if (isset($data['image']) && $data['image'] instanceof \Illuminate\Http\UploadedFile) {
+            $data['image'] = $this->imageService->uploadAndConvertToWebP($data['image'], 'disaster_reports');
+        } else {
+            unset($data['image']);
+        }
+
         $sanitized = $this->sanitize($data);
         $sanitized['form_hash'] = $this->makeFormHash($sanitized);
 
@@ -139,6 +149,18 @@ class DisasterReportService
 
     public function update(DisasterReport $report, array $data): DisasterReport
     {
+        // Handle image upload if present
+        if (isset($data['image']) && $data['image'] instanceof \Illuminate\Http\UploadedFile) {
+            // Delete old image if exists
+            if ($report->image) {
+                $this->imageService->deleteImage($report->image);
+            }
+            $data['image'] = $this->imageService->uploadAndConvertToWebP($data['image'], 'disaster_reports');
+        } else {
+            // Keep existing image
+            unset($data['image']);
+        }
+
         $sanitized = $this->sanitize($data);
         $formHash = $this->makeFormHash($sanitized);
 
@@ -175,6 +197,12 @@ class DisasterReportService
     public function delete(DisasterReport $report): void
     {
         $snapshot = $report->toArray();
+        
+        // Delete associated image
+        if ($report->image) {
+            $this->imageService->deleteImage($report->image);
+        }
+        
         $this->repository->delete($report);
 
         $this->activityLogger->log('disaster_report.deleted', $report, [
@@ -227,12 +255,6 @@ class DisasterReportService
         return $data;
     }
 
-    /**
-     * Build sparkline timeline data for the last 7 days
-     */
-    /**
-     * Build sparkline timeline data for the last 7 days
-     */
     private function buildSparklineTimelines(array $filters): array
     {
         // Get last 7 days dates
@@ -297,9 +319,6 @@ class DisasterReportService
         return $result;
     }
 
-    /**
-     * Apply affiliation filter for YFIS users.
-     */
     private function applyUserAffiliationFilter(array $filters): array
     {
         $user = auth()->user();

@@ -61,6 +61,13 @@
                         <p class="mb-1 fw-semibold">การให้ความช่วยเหลือเยียวยา</p>
                         <p class="text-muted">{{ $report->assistance_received }}</p>
                     @endif
+                    @if($report->image)
+                        <hr>
+                        <p class="mb-1 fw-semibold">รูปภาพประกอบ</p>
+                        <div class="mt-2">
+                            <img src="{{ asset('storage/' . $report->image) }}" class="img-fluid rounded shadow-sm" style="max-height: 400px; width: 100%; object-fit: contain;" alt="รูปภาพประกอบรายงาน">
+                        </div>
+                    @endif
                 </div>
             </div>
         </div>

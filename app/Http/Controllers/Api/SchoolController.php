@@ -24,6 +24,9 @@ class SchoolController extends Controller
                 $q->where('name', 'like', "%{$query}%")
                   ->orWhere('code', 'like', "%{$query}%");
             })
+            ->when(auth()->check() && auth()->user()->role === 'yfis' && auth()->user()->affiliation_id, function ($q) {
+                $q->where('affiliation_id', auth()->user()->affiliation_id);
+            })
             ->limit(10)
             ->get()
             ->map(function ($school) {
