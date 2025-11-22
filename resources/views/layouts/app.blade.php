@@ -289,6 +289,14 @@
                 transform: scale(0.95);
             }
         }
+        
+        /* Hover effect for user profile link in sidebar */
+        .hover-bg-white-05:hover {
+            background-color: rgba(255, 255, 255, 0.05);
+        }
+        .transition-all {
+            transition: all 0.2s ease;
+        }
     </style>
     @stack('styles')
 </head>
@@ -319,20 +327,47 @@
                 <a class="list-group-item list-group-item-action {{ request()->routeIs('disaster.index') ? 'active' : '' }}" href="{{ route('disaster.index') }}">
                     <i class="bi bi-file-earmark-text me-2"></i> จัดการรายงาน
                 </a>
+                <!-- <a class="list-group-item list-group-item-action {{ request()->routeIs('profile.*') ? 'active' : '' }}" href="{{ route('profile.edit') }}">
+                    <i class="bi bi-person-circle me-2"></i> โปรไฟล์
+                </a> -->
             @endauth
         </div>
         
         <div class="mt-auto p-4 border-top border-white-10 text-white">
             @auth
-                <div class="d-flex align-items-center mb-3">
-                    <div class="bg-white text-primary rounded-circle d-flex align-items-center justify-content-center me-2" style="width: 32px; height: 32px;">
-                        <i class="bi bi-person-fill"></i>
-                    </div>
-                    <span class="small fw-bold">{{ auth()->user()->name }}</span>
+                <div class="mb-3">
+                    <a href="{{ route('profile.edit') }}" class="text-decoration-none text-white d-block">
+                        <div class="d-flex align-items-center mb-2 hover-bg-white-05 p-2 rounded transition-all" style="cursor: pointer;">
+                            <div class="bg-white text-primary rounded-circle d-flex align-items-center justify-content-center me-2" style="width: 40px; height: 40px;">
+                                <i class="bi bi-person-fill fs-5"></i>
+                            </div>
+                            <div class="flex-grow-1">
+                                <div class="fw-bold" style="font-size: 0.9rem;">{{ auth()->user()->name }}</div>
+                                <div class="small opacity-75" style="font-size: 0.75rem;">
+                                    @if(auth()->user()->role === 'admin')
+                                        <span class="badge bg-danger bg-opacity-75">Admin</span>
+                                    @elseif(auth()->user()->role === 'data-entry')
+                                        <span class="badge bg-success bg-opacity-75">Data Entry</span>
+                                    @elseif(auth()->user()->role === 'yfis')
+                                        <span class="badge bg-info bg-opacity-75">YFIS</span>
+                                    @else
+                                        <span class="badge bg-secondary bg-opacity-75">{{ ucfirst(auth()->user()->role) }}</span>
+                                    @endif
+                                </div>
+                            </div>
+                        </div>
+                    </a>
+                    @if(auth()->user()->affiliation)
+                        <div class="small opacity-75 ms-5 ps-2" style="font-size: 0.75rem;">
+                            <i class="bi bi-building me-1"></i>{{ auth()->user()->affiliation->name }}
+                        </div>
+                    @endif
                 </div>
                 <form method="POST" action="{{ route('logout') }}">
                     @csrf
-                    <button type="submit" class="btn btn-outline-light w-100 btn-sm">ออกจากระบบ</button>
+                    <button type="submit" class="btn btn-outline-light w-100 btn-sm">
+                        <i class="bi bi-box-arrow-right me-2"></i>ออกจากระบบ
+                    </button>
                 </form>
             @endauth
             @guest
@@ -412,9 +447,17 @@
                     <i class="bi bi-person-fill fs-1"></i>
                 </div>
                 <h5 class="fw-bold mb-1">{{ auth()->user()->name }}</h5>
-                <p class="text-muted small mb-4">{{ auth()->user()->email }}</p>
+                <p class="text-muted small mb-1">{{ auth()->user()->email ?? auth()->user()->username }}</p>
+                @if(auth()->user()->affiliation)
+                    <p class="text-muted small mb-4"><i class="bi bi-building me-1"></i>{{ auth()->user()->affiliation->name }}</p>
+                @else
+                    <p class="text-muted small mb-4">{{ ucfirst(auth()->user()->role) }}</p>
+                @endif
                 
                 <div class="d-grid gap-2">
+                    <button type="button" class="btn btn-primary w-100 rounded-pill py-2" onclick="goToProfile()">
+                        <i class="bi bi-person-circle me-2"></i> แก้ไขโปรไฟล์
+                    </button>
                     <form method="POST" action="{{ route('logout') }}">
                         @csrf
                         <button type="submit" class="btn btn-danger w-100 rounded-pill py-2">
@@ -431,6 +474,18 @@
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
 <script>
+    // Function to go to profile (used in mobile modal)
+    function goToProfile() {
+        const modal = bootstrap.Modal.getInstance(document.getElementById('profileModal'));
+        if (modal) {
+            modal.hide();
+        }
+        // Small delay to ensure modal closes before navigation
+        setTimeout(() => {
+            window.location.href = '{{ route('profile.edit') }}';
+        }, 150);
+    }
+
     window.addEventListener('DOMContentLoaded', event => {
         const sidebarToggle = document.body.querySelector('#sidebarToggle');
         if (sidebarToggle) {

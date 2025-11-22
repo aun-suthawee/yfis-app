@@ -24,19 +24,53 @@ class AuthenticatedSessionController extends Controller
 
     public function store(Request $request): RedirectResponse
     {
-        $credentials = $request->validate([
-            'email' => ['required', 'email'],
+        $request->validate([
+            'login' => ['required', 'string'],
             'password' => ['required', 'string'],
         ]);
 
+        // Try to authenticate with username first
+        $credentials = [
+            'username' => $request->input('login'),
+            'password' => $request->input('password'),
+        ];
+
         if (Auth::attempt($credentials, $request->boolean('remember'))) {
             $request->session()->regenerate();
+            
+            // Check if user needs to complete profile (first-time setup)
+            $user = Auth::user();
+            if (empty($user->name) || empty($user->tel)) {
+                return redirect()
+                    ->route('profile.edit')
+                    ->with('warning', 'กรุณากรอกข้อมูลส่วนตัวของคุณก่อนใช้งานระบบ');
+            }
+            
+            return redirect()->intended(route('dashboard.index'));
+        }
 
+        // If username login fails, try with email
+        $credentials = [
+            'email' => $request->input('login'),
+            'password' => $request->input('password'),
+        ];
+
+        if (Auth::attempt($credentials, $request->boolean('remember'))) {
+            $request->session()->regenerate();
+            
+            // Check if user needs to complete profile (first-time setup)
+            $user = Auth::user();
+            if (empty($user->name) || empty($user->tel)) {
+                return redirect()
+                    ->route('profile.edit')
+                    ->with('warning', 'กรุณากรอกข้อมูลส่วนตัวของคุณก่อนใช้งานระบบ');
+            }
+            
             return redirect()->intended(route('dashboard.index'));
         }
 
         throw ValidationException::withMessages([
-            'email' => __('ไม่พบผู้ใช้หรือรหัสผ่านไม่ถูกต้อง'),
+            'login' => __('ไม่พบผู้ใช้หรือรหัสผ่านไม่ถูกต้อง'),
         ]);
     }
 

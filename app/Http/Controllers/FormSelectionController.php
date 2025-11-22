@@ -8,16 +8,28 @@ class FormSelectionController extends Controller
 {
     public function index()
     {
+        // Check if user is authenticated and missing contact information
+        if (auth()->check()) {
+            $user = auth()->user();
+            
+            // If user doesn't have name or tel, redirect to profile for first-time setup
+            if (empty($user->name) || empty($user->tel)) {
+                return redirect()
+                    ->route('profile.edit')
+                    ->with('warning', 'กรุณากรอกข้อมูลส่วนตัวของคุณก่อนใช้งานระบบ');
+            }
+        }
+        
         // Define available forms here
         // You can add more forms to this array in the future
         $forms = [
-            // [
-            //     'title' => 'แจ้งเหตุสาธารณภัย',
-            //     'description' => 'แบบฟอร์มสำหรับรายงานเหตุการณ์ภัยพิบัติและขอความช่วยเหลือ',
-            //     'route' => 'disaster.create',
-            //     'icon' => 'bi-exclamation-triangle-fill', 
-            //     'color' => 'danger' 
-            // ],
+            [
+                'title' => 'แจ้งเหตุสาธารณภัย',
+                'description' => 'แบบฟอร์มสำหรับรายงานเหตุการณ์ภัยพิบัติและขอความช่วยเหลือ',
+                'route' => 'disaster.create',
+                'icon' => 'bi-exclamation-triangle-fill', 
+                'color' => 'danger' 
+            ],
             // [
             //     'title' => 'แจ้งข้อมูลศูนย์พักพิง',
             //     'description' => 'แบบฟอร์มสำหรับรายงานข้อมูลศูนย์พักพิง',

@@ -21,8 +21,8 @@ class DisasterReportController extends Controller
         private ExportService $exportService
     ) {
         $this->middleware('auth')->except(['dataset']);
-        $this->middleware('role:admin,data-entry')->only(['create', 'store', 'edit', 'update', 'destroy']);
-        $this->middleware('role:admin')->only(['publish', 'unpublish']);
+        $this->middleware('role:admin,data-entry,yfis')->only(['create', 'store', 'edit', 'update', 'destroy']);
+        $this->middleware('role:admin')->only(['publish', 'unpublish', 'bulkPublish']);
         $this->middleware('throttle:disaster-submissions')->only(['store', 'update']);
     }
 
@@ -83,6 +83,8 @@ class DisasterReportController extends Controller
 
     public function edit(DisasterReport $disasterReport): View
     {
+        $this->authorize('update', $disasterReport);
+        
         return view('disaster_reports.edit', [
             'report' => $disasterReport,
             'districts' => District::orderBy('name')->get(),
@@ -92,6 +94,8 @@ class DisasterReportController extends Controller
 
     public function update(UpdateDisasterReportRequest $request, DisasterReport $disasterReport): RedirectResponse
     {
+        $this->authorize('update', $disasterReport);
+        
         $this->service->update($disasterReport, $request->validated());
 
         return redirect()
@@ -101,6 +105,8 @@ class DisasterReportController extends Controller
 
     public function destroy(DisasterReport $disasterReport): RedirectResponse
     {
+        $this->authorize('delete', $disasterReport);
+        
         $this->service->delete($disasterReport);
 
         return redirect()
@@ -144,7 +150,7 @@ class DisasterReportController extends Controller
     {
         $this->service->unpublish($disasterReport);
 
-        return back()->with('status', 'ยกเลิกการเผยแพร่รายงานเรียบร้อยแล้ว');
+        return back()->with('status', __('ยกเลิกการเผยแพร่รายงานเรียบร้อยแล้ว'));
     }
 
     public function bulkPublish(\Illuminate\Http\Request $request): RedirectResponse
@@ -160,10 +166,10 @@ class DisasterReportController extends Controller
 
         if ($action === 'publish') {
             DisasterReport::whereIn('id', $ids)->update(['is_published' => true]);
-            $message = 'เผยแพร่รายงานที่เลือกเรียบร้อยแล้ว';
+            $message = __('เผยแพร่รายงานที่เลือกเรียบร้อยแล้ว');
         } else {
             DisasterReport::whereIn('id', $ids)->update(['is_published' => false]);
-            $message = 'ยกเลิกการเผยแพร่รายงานที่เลือกเรียบร้อยแล้ว';
+            $message = __('ยกเลิกการเผยแพร่รายงานที่เลือกเรียบร้อยแล้ว');
         }
 
         return back()->with('status', $message);

@@ -8,6 +8,7 @@ use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\ValidationException;
+use Illuminate\Support\Facades\DB;
 
 class DisasterReportService
 {
@@ -19,34 +20,44 @@ class DisasterReportService
 
     public function paginate(array $filters, int $perPage = 15): LengthAwarePaginator
     {
+        $filters = $this->applyUserAffiliationFilter($filters);
         return $this->repository->paginateWithFilters($filters, $perPage);
     }
 
     public function dataset(array $filters): Collection
     {
         $filters['is_published'] = true;
+        $filters = $this->applyUserAffiliationFilter($filters);
         return $this->repository->getWithFilters($filters);
     }
 
     public function dashboardData(array $filters): array
     {
         $filters['is_published'] = true;
-        $reports = $this->repository->getWithFilters($filters);
-
-        // Calculate severe impact: Flood + Damage > 0
-        $severeCount = $reports->filter(function ($report) {
-            $totalDamage = $report->damage_building + $report->damage_equipment + $report->damage_material;
-            return $report->disaster_type === 'น้ำท่วม' && $totalDamage > 0;
-        })->count();
-
-        $totalReports = $reports->count();
-        $closedCount = $reports->where('teaching_status', 'closed')->count();
+        $filters = $this->applyUserAffiliationFilter($filters);
         
-        // Total schools base for percentage calculation
-        $totalSchoolsBase = 1102;
+        // Base query for counts
+        $baseQuery = $this->repository->getFilteredQuery($filters);
 
-        // Build sparkline timelines (last 7 days)
-        $sparklineTimelines = $this->buildSparklineTimelines($reports);
+        // Severe impact: Flood + Damage > 0
+        $severeCount = $baseQuery->clone()
+            ->where('disaster_type', 'น้ำท่วม')
+            ->whereRaw('(damage_building + damage_equipment + damage_material) > 0')
+            ->count();
+
+        $totalReports = $baseQuery->clone()->count();
+        $closedCount = $baseQuery->clone()->where('teaching_status', 'closed')->count();
+        
+        $totalSchoolsBase = config('settings.total_schools_base', 1102);
+
+        // Damage by Category
+        $damageByCategory = $baseQuery->clone()
+            ->selectRaw('sum(damage_building) as building, sum(damage_equipment) as equipment, sum(damage_material) as material')
+            ->first()
+            ->toArray();
+            
+        // Ensure floats
+        $damageByCategory = array_map('floatval', $damageByCategory);
 
         return [
             'metrics' => $this->repository->aggregateForDashboard($filters),
@@ -57,49 +68,56 @@ class DisasterReportService
                 'total_closed' => $closedCount,
                 'closed_percent' => $totalReports > 0 ? ($closedCount / $totalReports) * 100 : 0,
                 'severe_count' => $severeCount,
-                'total_damage' => (float) ($reports->sum('damage_building') + $reports->sum('damage_equipment') + $reports->sum('damage_material')),
+                'total_damage' => (float) ($damageByCategory['building'] + $damageByCategory['equipment'] + $damageByCategory['material']),
             ],
-            'damageByCategory' => [
-                'building' => (float) $reports->sum('damage_building'),
-                'equipment' => (float) $reports->sum('damage_equipment'),
-                'material' => (float) $reports->sum('damage_material'),
-            ],
-            'disasterTypeTotals' => $reports->groupBy('disaster_type')->map(fn ($items) => $items->count()),
-            'timeline' => $reports->groupBy(fn ($item) => optional($item->reported_at)->format('Y-m-d'))
-                ->map(fn ($items) => $items->count())
-                ->sortKeys(),
-            'statusBreakdown' => $reports->groupBy('current_status')->map(fn ($items) => $items->count()),
-            'teachingStatus' => $reports->groupBy('teaching_status')->map(fn ($items) => $items->count()),
+            'damageByCategory' => $damageByCategory,
+            'disasterTypeTotals' => $baseQuery->clone()
+                ->groupBy('disaster_type')
+                ->selectRaw('disaster_type, count(*) as count')
+                ->pluck('count', 'disaster_type'),
+            'timeline' => $baseQuery->clone()
+                ->selectRaw('DATE(reported_at) as date, count(*) as count')
+                ->groupBy('date')
+                ->orderBy('date')
+                ->pluck('count', 'date'),
+            'statusBreakdown' => $baseQuery->clone()
+                ->groupBy('current_status')
+                ->selectRaw('current_status, count(*) as count')
+                ->pluck('count', 'current_status'),
+            'teachingStatus' => $baseQuery->clone()
+                ->groupBy('teaching_status')
+                ->selectRaw('teaching_status, count(*) as count')
+                ->pluck('count', 'teaching_status'),
             'humanImpact' => [
-                'students' => [
-                    'affected' => (int) $reports->sum('affected_students'),
-                    'injured' => (int) $reports->sum('injured_students'),
-                    'dead' => (int) $reports->sum('dead_students'),
-                ],
-                'staff' => [
-                    'affected' => (int) $reports->sum('affected_staff'),
-                    'injured' => (int) $reports->sum('injured_staff'),
-                    'dead' => (int) $reports->sum('dead_staff'),
-                ],
+                'students' => $baseQuery->clone()->selectRaw('sum(affected_students) as affected, sum(injured_students) as injured, sum(dead_students) as dead')->first()->toArray(),
+                'staff' => $baseQuery->clone()->selectRaw('sum(affected_staff) as affected, sum(injured_staff) as injured, sum(dead_staff) as dead')->first()->toArray(),
             ],
-            'damageByDistrict' => $reports->groupBy(fn($r) => $r->district->name ?? 'ไม่ระบุ')
-                ->map(fn ($items) => $items->sum('damage_total_request'))
-                ->sortDesc()
-                ->take(10),
-            'reportsByAffiliation' => $reports->groupBy(fn($r) => $r->affiliation->name ?? 'ไม่ระบุ')
-                ->map(fn ($items) => $items->count())
-                ->sortDesc()
-                ->take(10),
-            'mapPoints' => $reports
-                ->filter(fn ($item) => $item->latitude && $item->longitude)
+            'damageByDistrict' => $baseQuery->clone()
+                ->join('districts', 'disaster_reports.district_id', '=', 'districts.id')
+                ->groupBy('districts.name')
+                ->selectRaw('districts.name, sum(damage_total_request) as total')
+                ->orderByDesc('total')
+                ->limit(10)
+                ->pluck('total', 'districts.name'),
+            'reportsByAffiliation' => $baseQuery->clone()
+                ->join('affiliations', 'disaster_reports.affiliation_id', '=', 'affiliations.id')
+                ->groupBy('affiliations.name')
+                ->selectRaw('affiliations.name, count(*) as count')
+                ->orderByDesc('count')
+                ->limit(10)
+                ->pluck('count', 'affiliations.name'),
+            'mapPoints' => $baseQuery->clone()
+                ->whereNotNull('latitude')
+                ->whereNotNull('longitude')
+                ->get(['organization_name', 'current_status', 'damage_total_request as damage', 'latitude as lat', 'longitude as lng'])
                 ->map(fn ($item) => [
                     'organization' => $item->organization_name,
                     'status' => $item->current_status,
-                    'damage' => (float) $item->damage_total_request,
-                    'lat' => (float) $item->latitude,
-                    'lng' => (float) $item->longitude,
-                ])->values(),
-            'sparklines' => $sparklineTimelines,
+                    'damage' => (float) $item->damage,
+                    'lat' => (float) $item->lat,
+                    'lng' => (float) $item->lng,
+                ]),
+            'sparklines' => $this->buildSparklineTimelines($filters),
         ];
     }
 
@@ -212,67 +230,85 @@ class DisasterReportService
     /**
      * Build sparkline timeline data for the last 7 days
      */
-    private function buildSparklineTimelines(Collection $reports): array
+    /**
+     * Build sparkline timeline data for the last 7 days
+     */
+    private function buildSparklineTimelines(array $filters): array
     {
         // Get last 7 days dates
-        $last7Days = collect();
+        $dates = collect();
         for ($i = 6; $i >= 0; $i--) {
-            $last7Days->push(now()->subDays($i)->format('Y-m-d'));
+            $dates->push(now()->subDays($i)->format('Y-m-d'));
         }
 
-        // 1. Affected Institutions (total reports per day)
-        $affectedByDay = $reports->groupBy(fn ($item) => optional($item->reported_at)->format('Y-m-d'))
-            ->map(fn ($items) => $items->count());
+        $baseQuery = $this->repository->getFilteredQuery($filters);
+        $startDate = now()->subDays(6)->startOfDay();
+        $endDate = now()->endOfDay();
 
-        // 2. Closed Institutions (teaching_status = closed per day)
-        $closedByDay = $reports->filter(fn ($r) => $r->teaching_status === 'closed')
-            ->groupBy(fn ($item) => optional($item->reported_at)->format('Y-m-d'))
-            ->map(fn ($items) => $items->count());
-
-        // 3. Students Affected & Dead (per day)
-        $studentsAffectedByDay = $reports->groupBy(fn ($item) => optional($item->reported_at)->format('Y-m-d'))
-            ->map(fn ($items) => (int) $items->sum('affected_students'));
-        
-        $studentsDeadByDay = $reports->groupBy(fn ($item) => optional($item->reported_at)->format('Y-m-d'))
-            ->map(fn ($items) => (int) $items->sum('dead_students'));
-
-        // 4. Staff Affected & Dead (per day)
-        $staffAffectedByDay = $reports->groupBy(fn ($item) => optional($item->reported_at)->format('Y-m-d'))
-            ->map(fn ($items) => (int) $items->sum('affected_staff'));
-        
-        $staffDeadByDay = $reports->groupBy(fn ($item) => optional($item->reported_at)->format('Y-m-d'))
-            ->map(fn ($items) => (int) $items->sum('dead_staff'));
-
-        // 5. Damage by Category (building, equipment, material per day)
-        $damageBuildingByDay = $reports->groupBy(fn ($item) => optional($item->reported_at)->format('Y-m-d'))
-            ->map(fn ($items) => (float) $items->sum('damage_building'));
-        
-        $damageEquipmentByDay = $reports->groupBy(fn ($item) => optional($item->reported_at)->format('Y-m-d'))
-            ->map(fn ($items) => (float) $items->sum('damage_equipment'));
-        
-        $damageMaterialByDay = $reports->groupBy(fn ($item) => optional($item->reported_at)->format('Y-m-d'))
-            ->map(fn ($items) => (float) $items->sum('damage_material'));
-
-        // 8. Severe Impact (flood + damage > 0 per day)
-        $severeByDay = $reports->filter(function ($report) {
-                $totalDamage = $report->damage_building + $report->damage_equipment + $report->damage_material;
-                return $report->disaster_type === 'น้ำท่วม' && $totalDamage > 0;
-            })
-            ->groupBy(fn ($item) => optional($item->reported_at)->format('Y-m-d'))
-            ->map(fn ($items) => $items->count());
+        // Get aggregated data grouped by date
+        $dailyStats = $baseQuery->clone()
+            ->whereBetween('reported_at', [$startDate, $endDate])
+            ->selectRaw('
+                DATE(reported_at) as date,
+                count(*) as affected_institutions,
+                sum(case when teaching_status = "closed" then 1 else 0 end) as closed_institutions,
+                sum(affected_students) as students_affected,
+                sum(dead_students) as students_dead,
+                sum(affected_staff) as staff_affected,
+                sum(dead_staff) as staff_dead,
+                sum(damage_building) as damage_building,
+                sum(damage_equipment) as damage_equipment,
+                sum(damage_material) as damage_material,
+                sum(case when disaster_type = "น้ำท่วม" AND (damage_building + damage_equipment + damage_material) > 0 then 1 else 0 end) as severe_impact
+            ')
+            ->groupBy('date')
+            ->get()
+            ->keyBy('date');
 
         // Map to last 7 days with zero padding
-        return [
-            'affected_institutions' => $last7Days->map(fn ($date) => $affectedByDay->get($date, 0))->values()->toArray(),
-            'closed_institutions' => $last7Days->map(fn ($date) => $closedByDay->get($date, 0))->values()->toArray(),
-            'students_affected' => $last7Days->map(fn ($date) => $studentsAffectedByDay->get($date, 0))->values()->toArray(),
-            'students_dead' => $last7Days->map(fn ($date) => $studentsDeadByDay->get($date, 0))->values()->toArray(),
-            'staff_affected' => $last7Days->map(fn ($date) => $staffAffectedByDay->get($date, 0))->values()->toArray(),
-            'staff_dead' => $last7Days->map(fn ($date) => $staffDeadByDay->get($date, 0))->values()->toArray(),
-            'damage_building' => $last7Days->map(fn ($date) => $damageBuildingByDay->get($date, 0))->values()->toArray(),
-            'damage_equipment' => $last7Days->map(fn ($date) => $damageEquipmentByDay->get($date, 0))->values()->toArray(),
-            'damage_material' => $last7Days->map(fn ($date) => $damageMaterialByDay->get($date, 0))->values()->toArray(),
-            'severe_impact' => $last7Days->map(fn ($date) => $severeByDay->get($date, 0))->values()->toArray(),
+        $result = [
+            'affected_institutions' => [],
+            'closed_institutions' => [],
+            'students_affected' => [],
+            'students_dead' => [],
+            'staff_affected' => [],
+            'staff_dead' => [],
+            'damage_building' => [],
+            'damage_equipment' => [],
+            'damage_material' => [],
+            'severe_impact' => [],
         ];
+
+        foreach ($dates as $date) {
+            $stats = $dailyStats->get($date);
+            
+            $result['affected_institutions'][] = (int) ($stats->affected_institutions ?? 0);
+            $result['closed_institutions'][] = (int) ($stats->closed_institutions ?? 0);
+            $result['students_affected'][] = (int) ($stats->students_affected ?? 0);
+            $result['students_dead'][] = (int) ($stats->students_dead ?? 0);
+            $result['staff_affected'][] = (int) ($stats->staff_affected ?? 0);
+            $result['staff_dead'][] = (int) ($stats->staff_dead ?? 0);
+            $result['damage_building'][] = (float) ($stats->damage_building ?? 0);
+            $result['damage_equipment'][] = (float) ($stats->damage_equipment ?? 0);
+            $result['damage_material'][] = (float) ($stats->damage_material ?? 0);
+            $result['severe_impact'][] = (int) ($stats->severe_impact ?? 0);
+        }
+
+        return $result;
+    }
+
+    /**
+     * Apply affiliation filter for YFIS users.
+     */
+    private function applyUserAffiliationFilter(array $filters): array
+    {
+        $user = auth()->user();
+        
+        // If user is YFIS role and has an affiliation, filter by their affiliation
+        if ($user && $user->role === 'yfis' && $user->affiliation_id) {
+            $filters['affiliation_id'] = $user->affiliation_id;
+        }
+        
+        return $filters;
     }
 }

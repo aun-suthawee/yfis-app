@@ -7,12 +7,26 @@ use Illuminate\Http\Request;
 
 class ShelterController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware('auth');
+        $this->middleware('role:admin,data-entry,yfis')->only(['create', 'store', 'edit', 'update', 'destroy']);
+    }
+
     /**
      * Display a listing of the resource.
      */
     public function index()
     {
-        $shelters = Shelter::latest()->paginate(10);
+        $query = Shelter::with(['district', 'affiliation'])->latest();
+        
+        // Filter by affiliation for YFIS users
+        $user = auth()->user();
+        if ($user && $user->role === 'yfis' && $user->affiliation_id) {
+            $query->where('affiliation_id', $user->affiliation_id);
+        }
+        
+        $shelters = $query->paginate(10);
         return view('shelters.index', compact('shelters'));
     }
 
@@ -65,6 +79,8 @@ class ShelterController extends Controller
      */
     public function edit(Shelter $shelter)
     {
+        $this->authorize('update', $shelter);
+        
         $districts = \App\Models\District::all();
         $affiliations = \App\Models\Affiliation::all();
         return view('shelters.edit', compact('shelter', 'districts', 'affiliations'));
@@ -75,6 +91,8 @@ class ShelterController extends Controller
      */
     public function update(Request $request, Shelter $shelter)
     {
+        $this->authorize('update', $shelter);
+        
         $request->validate([
             'name' => 'required|string|max:255',
             'district_id' => 'required|exists:districts,id',
@@ -101,6 +119,8 @@ class ShelterController extends Controller
      */
     public function destroy(Shelter $shelter)
     {
+        $this->authorize('delete', $shelter);
+        
         $shelter->delete();
         return redirect()->route('shelters.index')->with('status', 'ลบข้อมูลศูนย์พักพิงเรียบร้อยแล้ว');
     }

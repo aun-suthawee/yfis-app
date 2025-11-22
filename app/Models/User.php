@@ -24,6 +24,10 @@ class User extends Authenticatable
         'email',
         'password',
         'role',
+        'username',
+        'address',
+        'tel',
+        'affiliation_id',
     ];
 
     /**
@@ -71,5 +75,13 @@ class User extends Authenticatable
     public function hasAnyRole(array $roles): bool
     {
         return in_array($this->role, $roles, true);
+    }
+
+    /**
+     * Get the affiliation that owns the user.
+     */
+    public function affiliation(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    {
+        return $this->belongsTo(Affiliation::class);
     }
 }

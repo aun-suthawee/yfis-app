@@ -77,14 +77,17 @@
                 <div class="card-body pt-0">
                     <div class="mb-3">
                         <label class="form-label text-muted small fw-bold" for="organization_name">ชื่อหน่วยงาน / สถานศึกษา <span class="text-danger">*</span></label>
-                        <input type="text" class="form-control bg-light border-0" id="organization_name" name="organization_name" value="{{ old('organization_name', $report->organization_name ?? '') }}" required placeholder="ระบุชื่อโรงเรียนหรือหน่วยงาน">
+                        <input type="text" class="form-control bg-light border-0" id="organization_name" name="organization_name" value="{{ old('organization_name', $report->organization_name ?? '') }}" required placeholder="พิมพ์ชื่อโรงเรียนเพื่อค้นหา" autocomplete="off">
+                        <input type="hidden" id="school_id" name="school_id" value="{{ old('school_id', $report->school_id ?? '') }}">
+                        <div id="school_suggestions" class="list-group position-absolute" style="z-index: 1000; max-height: 300px; overflow-y: auto; display: none;"></div>
                         <x-input-error name="organization_name" />
                     </div>
 
                     <div class="row g-3 mb-3">
                         <div class="col-md-6">
                             <label class="form-label text-muted small fw-bold" for="district_id">อำเภอ <span class="text-danger">*</span></label>
-                            <select class="form-select bg-light border-0" id="district_id" name="district_id" required>
+                            <input type="text" class="form-control bg-light border-0" id="district_display" disabled placeholder="จะถูกเติมอัตโนมัติเมื่อเลือกโรงเรียน">
+                            <select class="form-select bg-light border-0 d-none" id="district_id" name="district_id" required>
                                 <option value="">เลือกอำเภอ</option>
                                 @foreach($districts as $district)
                                     <option value="{{ $district->id }}" @selected(old('district_id', $report->district_id ?? '') == $district->id)>{{ $district->name }}</option>
@@ -94,7 +97,8 @@
                         </div>
                         <div class="col-md-6">
                             <label class="form-label text-muted small fw-bold" for="affiliation_id">สังกัด <span class="text-danger">*</span></label>
-                            <select class="form-select bg-light border-0" id="affiliation_id" name="affiliation_id" required>
+                            <input type="text" class="form-control bg-light border-0" id="affiliation_display" disabled placeholder="จะถูกเติมอัตโนมัติเมื่อเลือกโรงเรียน">
+                            <select class="form-select bg-light border-0 d-none" id="affiliation_id" name="affiliation_id" required>
                                 <option value="">เลือกสังกัด</option>
                                 @foreach($affiliations as $affiliation)
                                     <option value="{{ $affiliation->id }}" @selected(old('affiliation_id', $report->affiliation_id ?? '') == $affiliation->id)>{{ $affiliation->name }}</option>
@@ -226,7 +230,7 @@
             <div class="row g-3">
                 <div class="col-md-4">
                     <label class="form-label text-muted small fw-bold" for="contact_name">ชื่อ-นามสกุล <span class="text-danger">*</span></label>
-                    <input type="text" class="form-control bg-light border-0" id="contact_name" name="contact_name" value="{{ old('contact_name', $report->contact_name ?? '') }}" required>
+                    <input type="text" class="form-control bg-light border-0" id="contact_name" name="contact_name" value="{{ old('contact_name', $report->contact_name ?? auth()->user()->name ?? '') }}" required>
                 </div>
                 <div class="col-md-4">
                     <label class="form-label text-muted small fw-bold" for="contact_position">ตำแหน่ง <span class="text-danger">*</span></label>
@@ -234,7 +238,7 @@
                 </div>
                 <div class="col-md-4">
                     <label class="form-label text-muted small fw-bold" for="contact_phone">เบอร์โทรศัพท์ <span class="text-danger">*</span></label>
-                    <input type="tel" class="form-control bg-light border-0" id="contact_phone" name="contact_phone" value="{{ old('contact_phone', $report->contact_phone ?? '') }}" required pattern="[0-9+\-\s]{7,15}">
+                    <input type="tel" class="form-control bg-light border-0" id="contact_phone" name="contact_phone" value="{{ old('contact_phone', $report->contact_phone ?? auth()->user()->tel ?? '') }}" required pattern="[0-9+\-\s]{7,15}">
                 </div>
             </div>
         </div>
@@ -255,6 +259,17 @@
                     <label class="form-label text-muted small fw-bold" for="longitude">ลองจิจูด</label>
                     <input type="number" step="0.0000001" class="form-control bg-light border-0" id="longitude" name="longitude" value="{{ old('longitude', $report->longitude ?? '') }}" min="-180" max="180" placeholder="เช่น 101.12345">
                 </div>
+            </div>
+            
+            <div class="mb-3">
+                <label class="form-label text-muted small fw-bold" for="address_search">ค้นหาพิกัดจากที่อยู่</label>
+                <div class="input-group">
+                    <input type="text" class="form-control bg-light border-0" id="address_search" placeholder="กรอกที่อยู่หรือชื่อสถานที่เพื่อค้นหาพิกัด">
+                    <button type="button" class="btn btn-outline-primary" onclick="searchAddress()">
+                        <i class="bi bi-search me-1"></i> ค้นหา
+                    </button>
+                </div>
+                <!-- <small class="text-muted"><i class="bi bi-info-circle me-1"></i>เช่น: "โรงเรียนอนุบาลเบตง ยะลา" หรือ "95120"</small> -->
             </div>
             
             <div class="mb-3 d-flex align-items-center flex-wrap gap-2">
@@ -363,6 +378,59 @@
                 function updateInputs(lat, lng) {
                     document.getElementById('latitude').value = lat.toFixed(6);
                     document.getElementById('longitude').value = lng.toFixed(6);
+                }
+
+                window.searchAddress = function() {
+                    const addressInput = document.getElementById('address_search');
+                    const address = addressInput.value.trim();
+                    
+                    if (!address) {
+                        alert('กรุณากรอกที่อยู่ที่ต้องการค้นหา');
+                        return;
+                    }
+
+                    const btn = event.target.closest('button');
+                    const originalText = btn.innerHTML;
+                    btn.innerHTML = '<i class="bi bi-hourglass-split me-1"></i> กำลังค้นหา...';
+                    btn.disabled = true;
+
+                    // Use Nominatim (OpenStreetMap) geocoding API
+                    const query = encodeURIComponent(address + ', Thailand');
+                    fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${query}&limit=1`)
+                        .then(response => response.json())
+                        .then(data => {
+                            btn.innerHTML = originalText;
+                            btn.disabled = false;
+
+                            if (data && data.length > 0) {
+                                const lat = parseFloat(data[0].lat);
+                                const lng = parseFloat(data[0].lon);
+                                
+                                map.setView([lat, lng], 16);
+                                if (marker) {
+                                    marker.setLatLng([lat, lng]);
+                                } else {
+                                    marker = L.marker([lat, lng], {draggable: true}).addTo(map);
+                                    marker.on('dragend', function(event) {
+                                        const position = marker.getLatLng();
+                                        updateInputs(position.lat, position.lng);
+                                    });
+                                }
+                                updateInputs(lat, lng);
+                                
+                                // Show success message
+                                addressInput.classList.add('is-valid');
+                                setTimeout(() => addressInput.classList.remove('is-valid'), 3000);
+                            } else {
+                                alert('ไม่พบพิกัดสำหรับที่อยู่นี้ กรุณาลองใหม่อีกครั้ง');
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Geocoding error:', error);
+                            alert('เกิดข้อผิดพลาดในการค้นหาพิกัด');
+                            btn.innerHTML = originalText;
+                            btn.disabled = false;
+                        });
                 }
 
                 window.getCurrentLocation = function() {
@@ -475,6 +543,123 @@
                 confirmTrigger.addEventListener('click', () => {
                     confirmModal.hide();
                     form.submit();
+                });
+
+                // School Autocomplete Logic
+                const orgInput = document.getElementById('organization_name');
+                const schoolIdInput = document.getElementById('school_id');
+                const suggestionsBox = document.getElementById('school_suggestions');
+                const districtSelect = document.getElementById('district_id');
+                const districtDisplay = document.getElementById('district_display');
+                const affiliationSelect = document.getElementById('affiliation_id');
+                const affiliationDisplay = document.getElementById('affiliation_display');
+                const latInput = document.getElementById('latitude');
+                const lngInput = document.getElementById('longitude');
+
+                let searchTimeout;
+                let selectedSchool = null;
+
+                // Debounced search
+                orgInput.addEventListener('input', function() {
+                    const query = this.value.trim();
+                    
+                    clearTimeout(searchTimeout);
+                    
+                    if (query.length < 2) {
+                        suggestionsBox.style.display = 'none';
+                        return;
+                    }
+
+                    searchTimeout = setTimeout(() => {
+                        fetch(`/api/schools/search?q=${encodeURIComponent(query)}`)
+                            .then(response => response.json())
+                            .then(schools => {
+                                if (schools.length === 0) {
+                                    suggestionsBox.innerHTML = '<div class="list-group-item text-muted">ไม่พบโรงเรียน</div>';
+                                    suggestionsBox.style.display = 'block';
+                                    return;
+                                }
+
+                                suggestionsBox.innerHTML = schools.map(school => 
+                                    `<button type="button" class="list-group-item list-group-item-action" data-school='${JSON.stringify(school)}'>
+                                        <div class="fw-bold">${school.name}</div>
+                                        <small class="text-muted">รหัส: ${school.code} | ${school.district}</small>
+                                    </button>`
+                                ).join('');
+                                
+                                suggestionsBox.style.display = 'block';
+
+                                // Add click handlers
+                                suggestionsBox.querySelectorAll('button').forEach(btn => {
+                                    btn.addEventListener('click', function() {
+                                        const school = JSON.parse(this.dataset.school);
+                                        selectSchool(school);
+                                    });
+                                });
+                            })
+                            .catch(error => {
+                                console.error('Error fetching schools:', error);
+                                suggestionsBox.style.display = 'none';
+                            });
+                    }, 300);
+                });
+
+                function selectSchool(school) {
+                    selectedSchool = school;
+                    
+                    // Fill organization name
+                    orgInput.value = school.name;
+                    schoolIdInput.value = school.id;
+                    
+                    // Fill and disable district
+                    const districtOption = Array.from(districtSelect.options).find(opt => 
+                        opt.textContent.trim() === school.district.trim()
+                    );
+                    if (districtOption) {
+                        districtSelect.value = districtOption.value;
+                        districtDisplay.value = school.district;
+                    }
+                    
+                    // Fill and disable affiliation
+                    if (school.affiliation_id) {
+                        affiliationSelect.value = school.affiliation_id;
+                        const selectedAffOpt = affiliationSelect.options[affiliationSelect.selectedIndex];
+                        if (selectedAffOpt) {
+                            affiliationDisplay.value = selectedAffOpt.textContent;
+                        }
+                    }
+                    
+                    // Fill coordinates if available
+                    if (school.latitude && school.longitude) {
+                        latInput.value = school.latitude;
+                        lngInput.value = school.longitude;
+                        
+                        // Update map if it exists
+                        if (map) {
+                            const lat = parseFloat(school.latitude);
+                            const lng = parseFloat(school.longitude);
+                            map.setView([lat, lng], 16);
+                            
+                            if (marker) {
+                                marker.setLatLng([lat, lng]);
+                            } else {
+                                marker = L.marker([lat, lng], {draggable: true}).addTo(map);
+                                marker.on('dragend', function(event) {
+                                    const position = marker.getLatLng();
+                                    updateInputs(position.lat, position.lng);
+                                });
+                            }
+                        }
+                    }
+                    
+                    suggestionsBox.style.display = 'none';
+                }
+
+                // Close suggestions when clicking outside
+                document.addEventListener('click', function(e) {
+                    if (!orgInput.contains(e.target) && !suggestionsBox.contains(e.target)) {
+                        suggestionsBox.style.display = 'none';
+                    }
                 });
             });
         </script>

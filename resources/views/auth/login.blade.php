@@ -9,14 +9,14 @@
                         <img src="{{ asset('images/logo.png') }}" alt="Logo" width="100" class="mb-2 d-block mx-auto">
                     </div>
                     <h1 class="h4 mb-1 text-center">เข้าสู่ระบบ</h1>
-                    <p class="text-muted text-center mb-4">กรุณากรอกอีเมลและรหัสผ่านของคุณ</p>
+                    <p class="text-muted text-center mb-4">กรุณากรอก Username/Email และรหัสผ่านของคุณ</p>
 
                     <form method="POST" action="{{ route('login') }}" novalidate>
                         @csrf
                         <div class="mb-3">
-                            <label for="email" class="form-label">อีเมล</label>
-                            <input type="email" class="form-control @error('email') is-invalid @enderror" id="email" name="email" value="{{ old('email') }}" required autofocus>
-                            @error('email')
+                            <label for="login" class="form-label">Username หรือ Email</label>
+                            <input type="text" class="form-control @error('login') is-invalid @enderror" id="login" name="login" value="{{ old('login') }}" required autofocus>
+                            @error('login')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
                         </div>

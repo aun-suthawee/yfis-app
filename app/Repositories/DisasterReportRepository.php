@@ -67,30 +67,27 @@ class DisasterReportRepository
     /**
      * Run aggregate queries for dashboard metrics.
      */
+    /**
+     * Run aggregate queries for dashboard metrics.
+     */
     public function aggregateForDashboard(array $filters): array
     {
         $query = $this->applyFilters(DisasterReport::query(), $filters);
 
-        $collection = (clone $query)->get([
-            'organization_name',
-            'affected_students',
-            'injured_students',
-            'dead_students',
-            'affected_staff',
-            'injured_staff',
-            'dead_staff',
-            'damage_building',
-            'damage_equipment',
-            'damage_material',
-            'damage_total_request',
-        ]);
-
         return [
-            'affected_units' => $collection->pluck('organization_name')->unique()->count(),
-            'total_students_affected' => (int) $collection->sum('affected_students'),
-            'total_staff_affected' => (int) $collection->sum('affected_staff'),
-            'total_damage' => (float) $collection->sum('damage_total_request'),
+            'affected_units' => $query->clone()->distinct('organization_name')->count('organization_name'),
+            'total_students_affected' => (int) $query->clone()->sum('affected_students'),
+            'total_staff_affected' => (int) $query->clone()->sum('affected_staff'),
+            'total_damage' => (float) $query->clone()->sum('damage_total_request'),
         ];
+    }
+
+    /**
+     * Get a query builder with filters applied.
+     */
+    public function getFilteredQuery(array $filters): Builder
+    {
+        return $this->applyFilters(DisasterReport::query(), $filters);
     }
 
     /**

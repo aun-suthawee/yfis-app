@@ -10,7 +10,7 @@ class Affiliation extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['name'];
+    protected $fillable = ['name', 'school_count'];
 
     /**
      * Related disaster reports.
@@ -18,5 +18,21 @@ class Affiliation extends Model
     public function disasterReports(): HasMany
     {
         return $this->hasMany(DisasterReport::class);
+    }
+
+    /**
+     * Related schools.
+     */
+    public function schools(): HasMany
+    {
+        return $this->hasMany(School::class);
+    }
+
+    /**
+     * Related users.
+     */
+    public function users(): HasMany
+    {
+        return $this->hasMany(User::class);
     }
 }

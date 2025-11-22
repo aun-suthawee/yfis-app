@@ -24,7 +24,7 @@
         <a href="{{ route('export.json', $filters) }}" class="btn btn-outline-info btn-sm d-flex align-items-center">
             <i class="bi bi-filetype-json me-2"></i> Export JSON
         </a>
-        @if(auth()->user()?->hasAnyRole(['admin', 'data-entry']))
+        @if(auth()->user()?->hasAnyRole(['admin', 'data-entry', 'yfis']))
             <a href="{{ route('disaster.create') }}" class="btn btn-primary btn-sm d-flex align-items-center">
                 <i class="bi bi-plus-lg me-2"></i> เพิ่มรายงานใหม่
             </a>
